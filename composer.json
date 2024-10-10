@@ -1,0 +1,21 @@
+{
+    "name": "transfashion/merchsync",
+    "description": "Sinkronisasi inventori dari transbrowser ke kalista",
+    "type": "project",
+    "require": {
+        "php": "^8.3"
+    },
+    "license": "apache",
+    "autoload": {
+        "psr-4": {
+            "TransFashion\\MerchSync\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Agung Nugroho",
+            "email": "agung@transfashionindonesia.com"
+        }
+    ]
+}
+
