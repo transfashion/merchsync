@@ -4,8 +4,89 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f729c33f5ed5f97e689ba26ad278661e",
-    "packages": [],
+    "content-hash": "6284ea7a4da3831e341b300a70d3607b",
+    "packages": [
+        {
+            "name": "agungdhewe/phplogger",
+            "version": "v1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/agungdhewe/phplogger.git",
+                "reference": "55bb3f3a980ba7f6e691b55a44228b894e481ef5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/agungdhewe/phplogger/zipball/55bb3f3a980ba7f6e691b55a44228b894e481ef5",
+                "reference": "55bb3f3a980ba7f6e691b55a44228b894e481ef5",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "AgungDhewe\\PhpLogger\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Agung Nugroho",
+                    "email": "agung.dhewe@gmail.com"
+                }
+            ],
+            "description": "logger untuk PHP",
+            "support": {
+                "issues": "https://github.com/agungdhewe/phplogger/issues",
+                "source": "https://github.com/agungdhewe/phplogger/tree/v1.0"
+            },
+            "time": "2024-10-10T21:10:46+00:00"
+        },
+        {
+            "name": "agungdhewe/phpsqlutil",
+            "version": "v1.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/agungdhewe/phpsqlutil.git",
+                "reference": "08d66b028f096d181fb9bce8fe0bb0be41d99acb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/agungdhewe/phpsqlutil/zipball/08d66b028f096d181fb9bce8fe0bb0be41d99acb",
+                "reference": "08d66b028f096d181fb9bce8fe0bb0be41d99acb",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "AgungDhewe\\PhpSqlUtil\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Agung Nugroho",
+                    "email": "agung.dhewe@gmail.com"
+                }
+            ],
+            "description": "Utility for create SQL insert, update and delete",
+            "support": {
+                "issues": "https://github.com/agungdhewe/phpsqlutil/issues",
+                "source": "https://github.com/agungdhewe/phpsqlutil/tree/v1.2"
+            },
+            "time": "2024-10-10T19:33:26+00:00"
+        }
+    ],
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",

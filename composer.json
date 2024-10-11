@@ -3,7 +3,9 @@
     "description": "Sinkronisasi inventori dari transbrowser ke kalista",
     "type": "project",
     "require": {
-        "php": "^8.3"
+        "php": "^8.3",
+        "agungdhewe/phpsqlutil": "^1.1",
+        "agungdhewe/phplogger": "^1.0"
     },
     "license": "apache",
     "autoload": {
@@ -18,4 +20,3 @@
         }
     ]
 }
-
