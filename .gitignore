@@ -3,3 +3,4 @@
 config-production.php
 
 log.txt
+debug.txt

@@ -3,7 +3,7 @@
 use AgungDhewe\PhpLogger\Log;
 
 class Sync {
-	const _DELAY_BETWEEN_LOOP = 5; // seconds
+	const _DELAY_BETWEEN_LOOP = 0; // seconds
 	const _MAX_TX_PER_LOOP = 10;
 
 
@@ -31,7 +31,7 @@ class Sync {
 			self::$sql_cond_unprocessed = "
 				    (merchsync_isfail<3 or merchsync_batch is null) 
 				and (merchsync_result<>'SKIP' or merchsync_result is null)
-				and merchsync_type LIKE 'SL%' 
+				-- and merchsync_type LIKE 'SL%' 
 			";
 			
 
@@ -123,6 +123,8 @@ class Sync {
 		$syncPricing = new SyncPricing();
 		$syncClosing = new SyncClosing();
 
+
+
 		return [
 			'SL' => ['instance'=>$syncSales, 'method'=>'Sync', 'skip'=>SyncSales::SKIP_SYNC],
 			'REG' => ['instance'=>$syncReg, 'method'=>'Sync', 'skip'=>SyncRegister::SKIP_SYNC],
@@ -137,11 +139,11 @@ class Sync {
 			'RV-SEND' => ['instance'=>$syncRV, 'method'=>'Send', 'skip'=>SyncRV::SKIP_SEND],
 			'RV-RECV' => ['instance'=>$syncRV, 'method'=>'Recv', 'skip'=>SyncRV::SKIP_RECV],
 			'RV-POST' => ['instance'=>$syncRV, 'method'=>'Post', 'skip'=>SyncRV::SKIP_POST],
-			'RV-UNSEND' => ['instance'=>$syncRV, 'method'=>'UnSend', 'skip'=>SyncRV::SKIP_RECV],
-			'RV-UNRECV' => ['instance'=>$syncRV, 'method'=>'UnRecv', 'skip'=>SyncRV::SKIP_RECV],
-			'RV-UNPOST' => ['instance'=>$syncRV, 'method'=>'UnPost', 'skip'=>SyncRV::SKIP_RECV],
+			'RV-UNSEND' => ['instance'=>$syncRV, 'method'=>'UnSend', 'skip'=>SyncRV::SKIP_UNSEND],
+			'RV-UNRECV' => ['instance'=>$syncRV, 'method'=>'UnRecv', 'skip'=>SyncRV::SKIP_UNRECV],
+			'RV-UNPOST' => ['instance'=>$syncRV, 'method'=>'UnPost', 'skip'=>SyncRV::SKIP_UNPOST],
 			'PRC' => ['instance'=>$syncPricing, 'method'=>'Sync', 'skip'=>SyncPricing::SKIP_SYNC],
-			'INV-CLOsE' => ['instance'=>$syncClosing, 'method'=>'Close', 'skip'=>SyncClosing::SKIP_CLOSE],
+			'INV-CLOSE' => ['instance'=>$syncClosing, 'method'=>'Close', 'skip'=>SyncClosing::SKIP_CLOSE],
 			'INV-OPEN' => ['instance'=>$syncClosing, 'method'=>'Open', 'skip'=>SyncClosing::SKIP_OPEN],
 
 		];

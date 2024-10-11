@@ -22,7 +22,8 @@ Configuration::Set([
 	'Logger' => [
 		'output' => 'file',
 		'filename' => 'log.txt',
-		'ClearOnStart' => true
+		'ClearOnStart' => true,
+		'debug' => true,
 	]
 ]);
 

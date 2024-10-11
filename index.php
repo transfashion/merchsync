@@ -41,6 +41,7 @@ try {
 	$logfilepath = implode('/', [Configuration::getRootDir(), $logfilename]);
 	$clearlog = Configuration::Get("Logger.ClearOnStart");
 	$output = Configuration::Get("Logger.output");
+	$debugmode = Configuration::Get("Logger.debug");
 
 	echo "log to '$logfilename'\n";
 	if ($clearlog) {
@@ -48,11 +49,18 @@ try {
 		file_put_contents(Configuration::Get("Logger.filename"), "");
 	}	
 
+	if ($debugmode) {
+		echo "set debug mode\n";
+		Logger::SetDebugMode(true);
+	}
+
+
 	if ($output == "file") {
 		Logger::SetOutput(LoggerOutput::FILE);
 	} 
 
-	
+
+
 
 	echo "executing module...";
 	Sync::main();

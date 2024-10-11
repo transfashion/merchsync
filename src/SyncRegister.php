@@ -7,6 +7,10 @@ use AgungDhewe\PhpSqlUtil\SqlInsert;
 
 class SyncRegister extends SyncBase {
 
+	const bool SKIP_SYNC = false;
+
+	const bool UNIMPLEMENTED_SYNC = true;
+
 	private object $cmd_register_header_del;
 	private object $cmd_register_items_del;
 	private object $cmd_register_header_ins;
@@ -18,14 +22,16 @@ class SyncRegister extends SyncBase {
 	}
 
 	public function Sync(string $merchsync_id, string $merchsync_doc, string $merchsync_type ) : void {
+		$currentSyncType = 'REG';
+		
 		try {
 			// ambil data dari URL
 			$id = $merchsync_doc;
-			if ($merchsync_type!='REG') {
-				throw new \Exception("Type Sync $merchsync_type tidak sesuai dengan REG"); 
+			if ($merchsync_type!=$currentSyncType) {
+				throw new \Exception("Type Sync $merchsync_type tidak sesuai dengan $currentSyncType"); 
 			}
 
-			$endpoint = $this->url . '/getregister.php?id='. $id;
+			$endpoint = $this->TransBrowserUrl . '/getregister.php?id='. $id;
 			$data = $this->getDataFromUrl($endpoint);
 
 			$heinvregister_id = $data['header']['heinvregister_id'];
@@ -33,14 +39,16 @@ class SyncRegister extends SyncBase {
 			$this->copyToTempRegisterHeader($heinvregister_id, $data['header']);
 			$this->copyToTempRegisterItems($heinvregister_id, $data['items']);
 
+			if (self::UNIMPLEMENTED_SYNC) {
+				throw new \Exception("[$currentSyncType] not full implemented" );
+			}
 		} catch (\Exception $ex) {
+			Log::warning($ex->getMessage());
 			throw $ex;
 		}
 	}
 
 	private function deleteRegisterData($heinvregister_id) : void {
-		Log::info("Delete Register $heinvregister_id");
-
 		try {
 
 		} catch (\Exception $ex) {
@@ -50,23 +58,19 @@ class SyncRegister extends SyncBase {
 	}
 
 	private function copyToTempRegisterHeader(array $row) : void {
-		Log::info("Copy Register Header $heinvregister_id");
-
 		try {
 
 		} catch (\Exception $ex) {
-			Log::error("[HEAD] " . $ex->getMessage());
+			Log::error($ex->getMessage());
 			throw $ex;
 		}
 	}
 
 	private function copyToTempRegisterItems(array $rows) : void {
-		Log::info("Copy Register Items $heinvregister_id");
-
 		try {
 
 		} catch (\Exception $ex) {
-			Log::error("[ITEM] " . $ex->getMessage());
+			Log::error($ex->getMessage());
 			throw $ex;
 		}
 	}
