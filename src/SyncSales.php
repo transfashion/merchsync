@@ -44,7 +44,7 @@ class SyncSales extends SyncBase {
 
 			// Debug::print($data);
 			$bon_id = $data['header']['bon_id'];
-			$this->deleteSalesData($bon_id);
+			$this->deletePreviousSalesData($bon_id);
 			$this->copyToTempSalesHeader($bon_id, $data['header']);
 			$this->copyToTempSalesItems($bon_id, $data['items']);
 			$this->copyToTempSalesPayments($bon_id, $data['payments']);
@@ -60,8 +60,8 @@ class SyncSales extends SyncBase {
 	}
 
 
-	private function deleteSalesData(string $bon_id) : void {
-		Log::info("Deleting Sales $bon_id");
+	private function deletePreviousSalesData(string $bon_id) : void {
+		Log::info("Deleting previous Sales $bon_id");
 
 		try {
 
@@ -73,41 +73,31 @@ class SyncSales extends SyncBase {
 				$this->cmd_bon_header_del = new SqlDelete("tmp_bon", $obj, ['bon_id']);
 				$this->cmd_bon_header_del->bind(Database::$DbReport);
 			}
-			
-			$stmt = $this->cmd_bon_header_del->getPreparedStatement();
-			$params = $this->cmd_bon_header_del->getParameter($obj);
-			$stmt->execute($params);
-			
+			$this->cmd_bon_header_del->execute($obj);
 
 			// hapus bon items temporary
 			if (!isset($this->cmd_bon_items_del)) {
 				$this->cmd_bon_items_del = new SqlDelete("tmp_bonitem", $obj, ['bon_id']);
 				$this->cmd_bon_items_del->bind(Database::$DbReport);
 			}
-			$stmt = $this->cmd_bon_items_del->getPreparedStatement();
-			$params = $this->cmd_bon_items_del->getParameter($obj);
-			$stmt->execute($params);
-
+			$this->cmd_bon_items_del->execute($obj);
+			
 			
 			// hapus bon payment temporary 
 			if (!isset($this->cmd_bon_payments_del)) {
 				$this->cmd_bon_payments_del = new SqlDelete("tmp_bonpayment", $obj, ['bon_id']);
 				$this->cmd_bon_payments_del->bind(Database::$DbReport);
 			}
-			$stmt = $this->cmd_bon_payments_del->getPreparedStatement();
-			$params = $this->cmd_bon_payments_del->getParameter($obj);
-			$stmt->execute($params);
-
+			$this->cmd_bon_payments_del->execute($obj);
+			
 
 			// hapus bon di rpt_sales 
 			if (!isset($this->cmd_rpt_sales_del)) {
 				$this->cmd_rpt_sales_del = new SqlDelete("rpt_sales", $obj, ['bon_id']);
 				$this->cmd_rpt_sales_del->bind(Database::$DbReport);
 			}
-			$stmt = $this->cmd_rpt_sales_del->getPreparedStatement();
-			$params = $this->cmd_rpt_sales_del->getParameter($obj);
-			$stmt->execute($params);
-
+			$this->cmd_rpt_sales_del->execute($obj);
+	
 
 		} catch (\Exception $ex) {
 			Log::error($ex->getMessage());
@@ -122,9 +112,7 @@ class SyncSales extends SyncBase {
 				$this->cmd_bon_header_ins = new SqlInsert("tmp_bon", $obj);
 				$this->cmd_bon_header_ins->bind(Database::$DbReport);
 			}
-			$stmt = $this->cmd_bon_header_ins->getPreparedStatement();
-			$params = $this->cmd_bon_header_ins->getParameter($obj);
-			$stmt->execute($params);
+			$this->cmd_bon_header_ins->execute($obj);
 		} catch (\Exception $ex) {
 			Log::error($ex->getMessage());
 			throw $ex;
@@ -139,9 +127,7 @@ class SyncSales extends SyncBase {
 					$this->cmd_bon_items_ins = new SqlInsert("tmp_bonitem", $obj);
 					$this->cmd_bon_items_ins->bind(Database::$DbReport);
 				}
-				$stmt = $this->cmd_bon_items_ins->getPreparedStatement();
-				$params = $this->cmd_bon_items_ins->getParameter($obj);
-				$stmt->execute($params);
+				$this->cmd_bon_items_ins->execute($obj);
 			}
 		} catch (\Exception $ex) {
 			Log::error($ex->getMessage());
@@ -157,10 +143,8 @@ class SyncSales extends SyncBase {
 					$this->cmd_bon_payments_ins = new SqlInsert("tmp_bonpayment", $obj);
 					$this->cmd_bon_payments_ins->bind(Database::$DbReport);
 				}
-				$stmt = $this->cmd_bon_payments_ins->getPreparedStatement();
-				$params = $this->cmd_bon_payments_ins->getParameter($obj);
-				$stmt->execute($params);
-			}
+				$this->cmd_bon_payments_ins->execute($obj);
+		}
 		} catch (\Exception $ex) {
 			Log::error($ex->getMessage());
 			throw $ex;
@@ -175,9 +159,7 @@ class SyncSales extends SyncBase {
 					$this->cmd_rpt_sales = new SqlInsert("rpt_sales", $obj);
 					$this->cmd_rpt_sales->bind(Database::$DbReport);
 				}
-				$stmt = $this->cmd_rpt_sales->getPreparedStatement();
-				$params = $this->cmd_rpt_sales->getParameter($obj);
-				$stmt->execute($params);
+				$this->cmd_rpt_sales->execute($obj);
 			}
 		} catch (\Exception $ex) {
 			Log::error($ex->getMessage());

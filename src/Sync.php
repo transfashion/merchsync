@@ -31,7 +31,7 @@ class Sync {
 			self::$sql_cond_unprocessed = "
 				    (merchsync_isfail<3 or merchsync_batch is null) 
 				and (merchsync_result<>'SKIP' or merchsync_result is null)
-				-- and merchsync_type LIKE 'SL%' 
+				and merchsync_type LIKE 'DO%' 
 			";
 			
 

@@ -70,10 +70,8 @@ class SyncRV extends SyncBaseHemoving {
 			$data = $this->getDataFromUrl($endpoint);
 
 			$hemoving_id = $data['header']['hemoving_id'];
-			$this->deleteHemovingData($hemoving_id);
-			$this->copyToTempHemovingHeader($hemoving_id, $data['header']);
-			$this->copyToTempHemovingDetil($hemoving_id, $data['items']);
-
+			$this->updateTempHemovingHeader($hemoving_id, $data['header']);
+			$this->updateTempHemovingDetil($hemoving_id, $data['items']);
 
 			if (self::UNIMPLEMENTED_RECV) {
 				throw new \Exception("[$currentSyncType] not full implemented" );
@@ -98,9 +96,8 @@ class SyncRV extends SyncBaseHemoving {
 			$data = $this->getDataFromUrl($endpoint);
 
 			$hemoving_id = $data['header']['hemoving_id'];
-			$this->deleteHemovingData($hemoving_id);
-			$this->copyToTempHemovingHeader($hemoving_id, $data['header']);
-			$this->copyToTempHemovingDetil($hemoving_id, $data['items']);
+			$this->updateTempHemovingHeader($hemoving_id, $data['header']);
+			$this->updateTempHemovingDetil($hemoving_id, $data['items']);
 
 
 			if (self::UNIMPLEMENTED_POST) {
@@ -127,9 +124,6 @@ class SyncRV extends SyncBaseHemoving {
 
 			$hemoving_id = $data['header']['hemoving_id'];
 			$this->deleteHemovingData($hemoving_id);
-			$this->copyToTempHemovingHeader($hemoving_id, $data['header']);
-			$this->copyToTempHemovingDetil($hemoving_id, $data['items']);
-
 
 			if (self::UNIMPLEMENTED_UNSEND) {
 				throw new \Exception("[$currentSyncType] not full implemented" );
@@ -154,10 +148,8 @@ class SyncRV extends SyncBaseHemoving {
 			$data = $this->getDataFromUrl($endpoint);
 
 			$hemoving_id = $data['header']['hemoving_id'];
-			$this->deleteHemovingData($hemoving_id);
-			$this->copyToTempHemovingHeader($hemoving_id, $data['header']);
-			$this->copyToTempHemovingDetil($hemoving_id, $data['items']);
-
+			$this->updateTempHemovingHeader($hemoving_id, $data['header']);
+			$this->updateTempHemovingDetil($hemoving_id, $data['items']);
 
 			if (self::UNIMPLEMENTED_UNRECV) {
 				throw new \Exception("[$currentSyncType] not full implemented" );
@@ -182,10 +174,8 @@ class SyncRV extends SyncBaseHemoving {
 			$data = $this->getDataFromUrl($endpoint);
 
 			$hemoving_id = $data['header']['hemoving_id'];
-			$this->deleteHemovingData($hemoving_id);
-			$this->copyToTempHemovingHeader($hemoving_id, $data['header']);
-			$this->copyToTempHemovingDetil($hemoving_id, $data['items']);
-
+			$this->updateTempHemovingHeader($hemoving_id, $data['header']);
+			$this->updateTempHemovingDetil($hemoving_id, $data['items']);
 
 			if (self::UNIMPLEMENTED_UNPOST) {
 				throw new \Exception("[$currentSyncType] not full implemented" );

@@ -25,7 +25,7 @@ abstract class SyncBaseHemoving extends SyncBase {
 	}
 
 
-	protected function deleteHemovingData(string $hemoving_id) : void {
+	protected function deletePreviousHemovingData(string $hemoving_id) : void {
 		try {
 			$obj = new \stdClass;
 			$obj->hemoving_id = $hemoving_id;
@@ -35,10 +35,7 @@ abstract class SyncBaseHemoving extends SyncBase {
 				$this->cmd_header_del = new SqlDelete("tmp_hemoving", $obj, ['hemoving_id']);
 				$this->cmd_header_del->bind(Database::$DbReport);
 			}
-
-			$stmt = $this->cmd_header_del->getPreparedStatement();
-			$params = $this->cmd_header_del->getParameter($obj);
-			$stmt->execute($params);
+			$this->cmd_header_del->execute($obj);
 
 
 			// hapus tmp_hemovingdetil
@@ -46,9 +43,7 @@ abstract class SyncBaseHemoving extends SyncBase {
 				$this->cmd_detil_del = new SqlDelete("tmp_hemovingdetil", $obj, ['hemoving_id']);
 				$this->cmd_detil_del->bind(Database::$DbReport);
 			}
-			$stmt = $this->cmd_detil_del->getPreparedStatement();
-			$params = $this->cmd_detil_del->getParameter($obj);
-			$stmt->execute($params);
+			$this->cmd_detil_del->execute($obj);
 
 		} catch (\Exception $ex) {
 			Log::error($ex->getMessage());
@@ -63,9 +58,7 @@ abstract class SyncBaseHemoving extends SyncBase {
 				$this->cmd_header_ins = new SqlInsert("tmp_hemoving", $obj);
 				$this->cmd_header_ins->bind(Database::$DbReport);
 			}
-			$stmt = $this->cmd_header_ins->getPreparedStatement();
-			$params = $this->cmd_header_ins->getParameter($obj);
-			$stmt->execute($params);
+			$this->cmd_header_ins->execute($obj);
 		} catch (\Exception $ex) {
 			Log::error($ex->getMessage());
 			throw $ex;
@@ -80,9 +73,7 @@ abstract class SyncBaseHemoving extends SyncBase {
 					$this->cmd_detil_ins = new SqlInsert("tmp_hemovingdetil", $obj);
 					$this->cmd_detil_ins->bind(Database::$DbReport);
 				}
-				$stmt = $this->cmd_detil_ins->getPreparedStatement();
-				$params = $this->cmd_detil_ins->getParameter($obj);
-				$stmt->execute($params);
+				$this->cmd_detil_ins->execute($obj);
 			}
 		} catch (\Exception $ex) {
 			Log::error($ex->getMessage());

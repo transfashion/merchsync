@@ -31,7 +31,7 @@ class SyncDO extends SyncBaseHemoving {
 			$data = $this->getDataFromUrl($endpoint);
 
 			$hemoving_id = $data['header']['hemoving_id'];
-			$this->deleteHemovingData($hemoving_id);
+			$this->deletePreviousHemovingData($hemoving_id);
 			$this->copyToTempHemovingHeader($hemoving_id, $data['header']);
 			$this->copyToTempHemovingDetil($hemoving_id, $data['items']);
 
