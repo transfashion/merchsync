@@ -5,6 +5,7 @@ use AgungDhewe\PhpLogger\Log;
 use AgungDhewe\PhpSqlUtil\SqlDelete;
 use AgungDhewe\PhpSqlUtil\SqlInsert;
 use AgungDhewe\PhpSqlUtil\SqlUpdate;
+use AgungDhewe\PhpSqlUtil\SqlSelect;
 
 
 
@@ -17,7 +18,11 @@ abstract class SyncBaseHemoving extends SyncBase {
 	private object $cmd_header_ins;
 	private object $cmd_detil_ins;
 
+	private object $cmd_header_upd;
+	private object $cmd_detil_upd;
 
+	private object $cmd_header_cek;
+	private object $cmd_detil_cek;
 
 
 	public function __construct() {
@@ -74,6 +79,65 @@ abstract class SyncBaseHemoving extends SyncBase {
 					$this->cmd_detil_ins->bind(Database::$DbReport);
 				}
 				$this->cmd_detil_ins->execute($obj);
+			}
+		} catch (\Exception $ex) {
+			Log::error($ex->getMessage());
+			throw $ex;
+		}
+	}
+
+
+	protected function updateTempHemovingHeader(string $hemoving_id, array $row) : void {
+		try {
+			$cek = new \stdClass;
+			$cek->hemoving_id = $hemoving_id;
+			if (!isset($this->cmd_header_cek)) {
+				$this->cmd_header_cek = new SqlSelect("tmp_hemoving", $cek);
+				$this->cmd_header_cek->bind(Database::$DbReport);
+			}
+			$this->cmd_header_cek->execute($cek);
+			$row = $this->cmd_header_cek->fetch();
+			if (empty($row)) {
+				throw new \Exception("Data header '$hemoving_id' tidak ditemukan");
+			}
+
+
+			$obj = $this->createObjectHeader($row);
+			if (!isset($this->cmd_header_upd)) {
+				$this->cmd_header_upd = new SqlUpdate("tmp_hemoving", $obj, ['hemoving_id']);
+				$this->cmd_header_upd->bind(Database::$DbReport);
+			}
+			$this->cmd_header_upd->execute($obj);
+		} catch (\Exception $ex) {
+			Log::error($ex->getMessage());
+			throw $ex;
+		}
+	}
+
+
+	protected function updateTempHemovingDetil(string $hemoving_id, array $rows) : void {
+		try {
+			foreach ($rows as $row) {
+				$cek = new \stdClass;
+				$cek->hemoving_id = $hemoving_id;
+				$cek->hemovingdetil_line = $row['hemovingdetil_line'];
+				if (!isset($this->cmd_detil_cek)) {
+					$this->cmd_detil_cek = new SqlSelect("tmp_hemovingdetil", $cek);
+					$this->cmd_detil_cek->bind(Database::$DbReport);
+				}
+				$this->cmd_detil_cek->execute($cek);
+				$row = $this->cmd_detil_cek->fetch();
+				if (empty($row)) {
+					throw new \Exception("Data detil '$hemoving_id' line '$hemovingdetil_line' tidak ditemukan");
+				}
+
+
+				$obj = $this->createObjectDetil($row);
+				if (!isset($this->cmd_detil_upd)) {
+					$this->cmd_detil_upd = new SqlUpdate("tmp_hemovingdetil", $obj, ['hemoving_id', 'hemovingdetil_line']);
+					$this->cmd_detil_upd->bind(Database::$DbReport);
+				}
+				$this->cmd_detil_upd->execute($obj);
 			}
 		} catch (\Exception $ex) {
 			Log::error($ex->getMessage());
@@ -233,4 +297,6 @@ abstract class SyncBaseHemoving extends SyncBase {
 
 		return $obj;
 	}
+
+
 }
