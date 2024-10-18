@@ -1,4 +1,8 @@
-create table tmp_heinvitem (
+
+
+create table tmp_heinvregisteritem (
+	heinvregister_id varchar(30),
+	heinvregisteritem_line int,
 	heinvitem_id varchar(13) not null,
 	heinv_barcode varchar(26),
 	heinv_size varchar(10),
@@ -57,8 +61,7 @@ create table tmp_heinvitem (
 	deftype_id varchar(10),
 	ref_heinv_id varchar(13),
 	ref_heinvitem_id varchar(13),
-	PRIMARY key (heinvitem_id)
-) engine=MyISAM;
+	PRIMARY key (heinvregister_id, heinvregisteritem_line)
+) engine=MyISAM COMMENT='Table Temporary Register Item untuk diproses lebih lanjut';
 
 
-CREATE INDEX tmp_heinvitem_idx_heinv_id ON tmp_heinvitem (heinv_id);

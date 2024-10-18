@@ -9,11 +9,6 @@ use AgungDhewe\PhpSqlUtil\SqlSelect;
 
 class SyncSaldo extends SyncBase {
 
-	const bool SKIP_SYNC = false;
-
-	const bool UNIMPLEMENTED_SYNC = false;
-
-
 	private object $cmd_heinvitem_cek;
 	private object $cmd_heinv_cek;
 
@@ -30,8 +25,8 @@ class SyncSaldo extends SyncBase {
 		parent::__construct();
 	}
 
-	public function Sync(string $merchsync_id, string $merchsync_doc, string $merchsync_type ) : void {
-		$currentSyncType = 'SALDO';
+	public function Setup(string $merchsync_id, string $merchsync_doc, string $merchsync_type ) : void {
+		$currentSyncType = 'SETUP';
 
 		try {
 			// ambil data dari URL
@@ -49,7 +44,7 @@ class SyncSaldo extends SyncBase {
 			foreach ($data as $row) {
 				// print_r($row);
 				$heinvitem_id = $row['heinvitem_id'];
-				log::info("syncing $region_id $heinvitem_id");
+				log::info("copy heinvitem $region_id $heinvitem_id");
 				$this->AddOrUpdateTempHeinvItem($heinvitem_id, $row);
 			}
 
@@ -73,14 +68,10 @@ class SyncSaldo extends SyncBase {
 				$stmt->execute([":heinv_id" => $heinv_id]);
 				$row = $stmt->fetch();
 
-				log::info("syncing $region_id $heinv_id");
+				log::info("copy heinv $region_id $heinv_id");
 				$this->AddOrUpdateTempHeinv($heinv_id, $row);
 			}
 
-
-			if (self::UNIMPLEMENTED_SYNC) {
-				throw new \Exception("[$currentSyncType] not full implemented");
-			}
 		} catch (\Exception $ex) {
 			Log::warning($ex->getMessage());
 			throw $ex;

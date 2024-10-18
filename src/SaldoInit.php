@@ -13,13 +13,28 @@ class SaldoInit {
 			Database::Connect();
 
 			$syncSaldo = new SyncSaldo();
+			$syncItem = new SyncItem();
 
 			// '02600',
-			$regions = ['00700', '00900',  '03400', '03700', '03800', '03900', '04000', '04210'];
+			$regions = ['00900'];
+			$batchid = uniqid();
 			foreach ($regions as $region_id) {
-				$batchid = uniqid();
-				$syncSaldo->Sync($batchid, $region_id, 'SALDO');
+				// $syncSaldo->Setup($batchid, $region_id, 'SETUP');
 			}
+
+			reset($regions);
+			foreach ($regions as $region_id) {
+				$syncItem->CekData($batchid, $region_id);
+			}
+
+			reset($regions);
+			foreach ($regions as $region_id) {
+				// $syncItem->Setup($batchid, $region_id, 'SETUP');
+			}
+
+
+
+			
 
 			Log::info('DONE.');
 		} catch (\Exception $e) {

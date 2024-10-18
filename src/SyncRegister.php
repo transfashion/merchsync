@@ -132,20 +132,27 @@ class SyncRegister extends SyncBase {
 		return $obj;
 	}
 
-	private function createObjectItem(array $row) : object {
+	public function createObjectItem(array $row) : object {
 		$obj = new \stdClass;
 		$obj->heinvregister_id = $row['heinvregister_id'];
 		$obj->heinvregisteritem_line = $row['heinvregisteritem_line'];
+		$obj->heinvitem_id = $row['heinvitem_id'];
+		$obj->heinv_barcode = $row['heinv_barcode'];
+		$obj->heinv_size = $row['heinv_size'];
 		$obj->heinv_id = $row['heinv_id'];
 		$obj->heinv_art = $row['heinv_art'];
 		$obj->heinv_mat = $row['heinv_mat'];
 		$obj->heinv_col = $row['heinv_col'];
-		$obj->heinv_size = $row['heinv_size'];
-		$obj->heinv_barcode = $row['heinv_barcode'];
 		$obj->heinv_name = $row['heinv_name'];
 		$obj->heinv_descr = $row['heinv_descr'];
-		$obj->heinv_box = $row['heinv_box'];
 		$obj->heinv_gtype = $row['heinv_gtype'];
+		$obj->heinv_isdisabled = $row['heinv_isdisabled'];
+		$obj->heinv_isnonactive = $row['heinv_isnonactive'];
+		$obj->heinv_iskonsinyasi = $row['heinv_iskonsinyasi'];
+		$obj->heinv_isassembly = $row['heinv_isassembly'];
+		$obj->heinv_priceori = $row['heinv_priceori'];
+		$obj->heinv_price01 = $row['heinv_price01'];
+		$obj->heinv_pricedisc01 = $row['heinv_pricedisc01'];
 		$obj->heinv_produk = $row['heinv_produk'];
 		$obj->heinv_bahan = $row['heinv_bahan'];
 		$obj->heinv_pemeliharaan = $row['heinv_pemeliharaan'];
@@ -156,30 +163,40 @@ class SyncRegister extends SyncBase {
 		$obj->heinv_other3 = $row['heinv_other3'];
 		$obj->heinv_other4 = $row['heinv_other4'];
 		$obj->heinv_other5 = $row['heinv_other5'];
-		$obj->heinv_other6 = $row['heinv_other6'];
-		$obj->heinv_other7 = $row['heinv_other7'];
-		$obj->heinv_other8 = $row['heinv_other8'];
-		$obj->heinv_other9 = $row['heinv_other9'];
-		$obj->heinv_plbname = $row['heinv_plbname'];
-		$obj->heinvitem_colnum = $row['heinvitem_colnum'];
+		$obj->heinv_lastrvid = $row['heinv_lastrvid'];
+		$obj->heinv_lastrvdate = $row['heinv_lastrvdate'];
+		$obj->heinv_lastrvqty = $row['heinv_lastrvqty'];
+		$obj->heinv_lastpriceid = $row['heinv_lastpriceid'];
+		$obj->heinv_lastpricedate = $row['heinv_lastpricedate'];
+		$obj->heinv_lastcost = $row['heinv_lastcost'];
+		$obj->heinv_lastcostid = $row['heinv_lastcostid'];
+		$obj->heinv_lastcostdate = $row['heinv_lastcostdate'];
 		$obj->heinvgro_id = $row['heinvgro_id'];
 		$obj->heinvctg_id = $row['heinvctg_id'];
-		$obj->heinvctg_sizetag = $row['heinvctg_sizetag'];
-		$obj->branch_id = $row['branch_id'];
-		$obj->C00 = $row['C00'];
-		$obj->heinv_isweb = $row['heinv_isweb'];
-		$obj->heinv_webdescr = $row['heinv_webdescr'];
-		$obj->invcls_id = $row['invcls_id'];
+		$obj->heinv_group1 = $row['heinv_group1'];
+		$obj->heinv_group2 = $row['heinv_group2'];
+		$obj->heinv_gender = $row['heinv_gender'];
+		$obj->heinv_color1 = $row['heinv_color1'];
+		$obj->heinv_color2 = $row['heinv_color2'];
+		$obj->heinv_color3 = $row['heinv_color3'];
 		$obj->heinv_hscode_ship = $row['heinv_hscode_ship'];
-		$obj->heinv_hscode_ina = $row['heinv_hscode_ina'];
+		$obj->heinv_plbname = $row['heinv_plbname'];
+		$obj->ref_id = $row['ref_id'];
+		$obj->season_id = $row['season_id'];
+		$obj->region_id = $row['region_id'];
+		$obj->invcls_id = $row['invcls_id'];
+		$obj->heinv_isweb = $row['heinv_isweb'];
 		$obj->heinv_weight = $row['heinv_weight'];
 		$obj->heinv_length = $row['heinv_length'];
 		$obj->heinv_width = $row['heinv_width'];
 		$obj->heinv_height = $row['heinv_height'];
-		$obj->heinv_price = $row['heinv_price'];
+		$obj->heinv_webdescr = $row['heinv_webdescr'];
+		$obj->deftype_id = $row['deftype_id'];
+		$obj->ref_heinv_id = $row['ref_heinv_id'];
+		$obj->ref_heinvitem_id = $row['ref_heinvitem_id'];
+		
 
 		return $obj;
 	}
-
 
 }

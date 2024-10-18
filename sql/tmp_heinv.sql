@@ -55,4 +55,4 @@ create table tmp_heinv (
 	ref_heinv_id varchar(13),
 	ref_heinvitem_id varchar(13),
 	PRIMARY key (heinv_id)
-);
+) engine=MyISAM;
