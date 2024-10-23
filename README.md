@@ -1,1 +1,2 @@
-# merchsync
+# Synchronisasi Merchandise
+
