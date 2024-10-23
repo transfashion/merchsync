@@ -23,9 +23,11 @@ class SyncSaldo extends SyncBase {
 	private object $cmd_heinvitem_upd;
 	private object $cmd_heinv_upd;
 
+	private object $cmd_heinvitemsaldo_ins;
+
 	private object $stmt_heinv_list;
 	private object $stmt_heinv_get;
-	private object $stmt_heinvsaldo_del;
+	private object $stmt_heinvitemsaldo_del;
 
 
 	private object $stmt_heinvsaldo_list;
@@ -142,16 +144,18 @@ class SyncSaldo extends SyncBase {
 
 
 			$region_id = $id;
-
-			
+		
+			// hapus item saldo
 			if (!isset($this->stmt_heinvitemsaldo_del)) {
 				$sql = "delete from tmp_heinvitemsaldo where region_id = :region_id and periode_id = :periode_id";
 				$stmt = Database::$DbReport->prepare($sql);
 				$this->stmt_heinvitemsaldo_del = $stmt;
 			}
+			$stmt = $this->stmt_heinvitemsaldo_del;
+			$stmt->execute([":region_id" => $region_id, ":periode_id" => $periode_id]);
 
 
-
+			// ambil data heinvsaldo
 			if (!isset($this->stmt_heinvsaldo_list)) {
 				$sql = "select * from tmp_heinvsaldo where region_id = :region_id and periode_id = :periode_id";
 				$stmt = Database::$DbReport->prepare($sql);
@@ -162,7 +166,6 @@ class SyncSaldo extends SyncBase {
 			$stmt->execute([":region_id" => $region_id, ":periode_id" => $periode_id]);
 			$rows = $stmt->fetchall();
 			foreach ($rows as $row) {
-			
 
 				$saldo_id = $row['saldo_id'];
 				$branch_id = substr($saldo_id, 15, 7);
@@ -170,7 +173,43 @@ class SyncSaldo extends SyncBase {
 				$row['periode_id'] = $periode_id;
 				$row['branch_id'] = $branch_id;
 
-				echo "$saldo_id $periode_id $region_id $branch_id\n";
+				$costperitem = 0;
+				$saldo_qty = (int) $row['saldodetil_end'];
+				$saldo_value = (float) $row['saldodetil_endvalue'];
+				if ($saldo_qty!=0) {
+					$costperitem = $saldo_value / $saldo_qty;
+				}
+
+				$heinv_id = $row['heinv_id'];
+				for ($i=1; $i<=25; $i++) {
+					$colnum = str_pad($i, 2, "0", STR_PAD_LEFT);
+					$colname = "C$colnum";
+					$end_qty = $row[$colname];
+					$end_value = $costperitem * $end_qty;
+					$heinvitem_id = substr($heinv_id, 0, 11) . $colnum ;
+
+					if ($end_qty==0) {
+						continue;
+					}
+
+					$saldoitem = [
+						'periode_id' => $periode_id,
+						'region_id' => $region_id,
+						'branch_id' => $branch_id,
+						'heinv_id' => $heinv_id,
+						'heinvitem_id' => $heinvitem_id,
+						'end_qty' => $end_qty,
+						'end_value' => $end_value,
+						'cost' => $costperitem
+					];
+
+					$obj = $this->createObjectHeinvitemSaldo($saldoitem);
+					if (!isset($this->cmd_heinvitemsaldo_ins)) {
+						$this->cmd_heinvitemsaldo_ins = new SqlInsert("tmp_heinvitemsaldo", $obj);
+						$this->cmd_heinvitemsaldo_ins->bind(Database::$DbReport);
+					}
+					$this->cmd_heinvitemsaldo_ins->execute($obj);
+				}
 			}
 			
 		} catch (\Exception $ex) {
@@ -430,4 +469,17 @@ class SyncSaldo extends SyncBase {
 		return $obj;
 	}
 
+
+	private function createObjectHeinvitemSaldo(array $row) : object {
+		$obj = new \stdClass;
+		$obj->periode_id = $row['periode_id'];
+		$obj->region_id = $row['region_id'];
+		$obj->branch_id = $row['branch_id'];
+		$obj->heinv_id = $row['heinv_id'];
+		$obj->heinvitem_id = $row['heinvitem_id'];
+		$obj->end_qty = $row['end_qty'];
+		$obj->end_value = $row['end_value'];
+		$obj->cost = $row['cost'];
+		return $obj;
+	}
 }

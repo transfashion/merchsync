@@ -31,6 +31,7 @@ class RelationChecker {
 	private array $map_partner = [];
 	private array $map_kategori = [];
 	private array $map_site = [];
+	private array $map_brand = [];
 
 
 	public function cekBrand(string $region_id) : void {

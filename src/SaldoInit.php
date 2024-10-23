@@ -38,12 +38,15 @@ class SaldoInit {
 				'04210'
 			];
 
+
+			// ambil data master item aktiv dari transbrowser
 			$batchid = uniqid();
 			foreach ($regions as $region_id) {
 				log::print("setup region $region_id");
 				// $syncSaldo->Setup($batchid, $region_id, 'SETUP');
 			}
 
+			// ambil data saldo stok pada suatu periode dari TransBrowser
 			reset($regions);
 			foreach ($regions as $region_id) {
 				log::print("get stock $periode region $region_id");
@@ -65,28 +68,34 @@ class SaldoInit {
 			}
 
 
+			// siapkan data saldo per item (sizing) di temporary table
 			reset($regions);
 			foreach ($regions as $region_id) {
 				log::print("prepare $region_id regionbranch item saldo");
-				$syncSaldo->PrepareItemSaldo($batchid, $region_id, 'PREPARE-ITEM-SALDO', $periode);
+				//$syncSaldo->PrepareItemSaldo($batchid, $region_id, 'PREPARE-ITEM-SALDO', $periode);
 			}
 
-
-			/*
+			
+			
+			// setup master itemstock, merchitem, mercharticle di main database
 			reset($regions);
 			foreach ($regions as $region_id) {
 				log::print("setup item region $region_id");
-				// $syncItem->Setup($batchid, $region_id, 'SETUP');
+				//$syncItem->Setup($batchid, $region_id, 'SETUP');
 			}
+			
+
+			// cek heinvitem di tmp_heinvitemsaldo apakah sudah ada semua di merchitem
+			$syncItem->CekHeinvPeriode($periode);
 
 
-
+			// apply saldo dari tmp_heinvitemsaldo ke itemstockmoving main database
 			reset($regions);
 			foreach ($regions as $region_id) {
 				log::print("apply saldo periode $periode region $region_id");
-				// $syncItem->ApplySaldo($batchid, $region_id, 'APPLY-SALDO', $periode);
+				$syncItem->ApplySaldo($batchid, $region_id, 'APPLY-SALDO', $periode);
 			}
-			*/
+			
 			
 
 			Log::info('DONE.');

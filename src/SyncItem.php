@@ -90,6 +90,35 @@ class SyncItem extends SyncBase {
 		}
 	}	
 
+	public function CekHeinvPeriode(string $periode) : void {
+		try {
+
+		} catch (\Exception $ex) {
+			throw $ex;
+		}
+	}
+
+	public function ApplySaldo(string $merchsync_id, string $merchsync_doc, string $merchsync_type, string $periode_id ) : void {
+		$currentSyncType = 'APPLY-SALDO';
+
+		try {
+			// ambil data dari URL
+			$id = $merchsync_doc;
+			if ($merchsync_type!=$currentSyncType) {
+				throw new \Exception("Type Sync $merchsync_type tidak sesuai dengan $currentSyncType"); 
+			}
+
+			$region_id = $id;
+
+			
+
+		} catch (\Exception $ex) {
+			throw $ex;
+		}
+	}	
+
+
+
 
 	private function SetupMerchArticle(string $mercharticle_id, array &$row) : void {
 		try {
@@ -280,6 +309,9 @@ class SyncItem extends SyncBase {
 			throw $ex;
 		}
 	}
+
+
+
 
 	public function CekData(string $batchid, string $region_id, string $periode_id) : void {
 		try {

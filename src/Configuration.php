@@ -28,7 +28,7 @@ class Configuration
 			} else {
 				return self::$_config;
 			}
-		} catch (\Exception $e) {
+		} catch (\Exception $ex) {
 			throw $ex;
 		}
 	}
@@ -36,7 +36,7 @@ class Configuration
 
 	public static function GetUsedConfig(string $name) : string {
 		if (!array_key_exists($name, self::$_usedConfig)) {
-			throw new Exception("Config '$name' tidak ditemukan");
+			throw new \Exception("Config '$name' tidak ditemukan");
 		}
 		return self::$_usedConfig[$name];
 	}
