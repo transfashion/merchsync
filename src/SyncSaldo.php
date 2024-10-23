@@ -9,6 +9,11 @@ use AgungDhewe\PhpSqlUtil\SqlSelect;
 
 class SyncSaldo extends SyncBase {
 
+
+	private object $stmt_saldo_del;
+
+	private object $cmd_heinvsaldo_ins;
+
 	private object $cmd_heinvitem_cek;
 	private object $cmd_heinv_cek;
 
@@ -20,6 +25,10 @@ class SyncSaldo extends SyncBase {
 
 	private object $stmt_heinv_list;
 	private object $stmt_heinv_get;
+	private object $stmt_heinvsaldo_del;
+
+
+	private object $stmt_heinvsaldo_list;
 
 	function __construct() {
 		parent::__construct();
@@ -77,6 +86,99 @@ class SyncSaldo extends SyncBase {
 			throw $ex;
 		}
 	}
+
+
+	public function GetStock(string $merchsync_id, string $merchsync_doc, string $merchsync_type, string $periode_id ) : void {
+		$currentSyncType = 'GET-STOCK';
+
+		try {
+			// ambil data dari URL
+			$id = $merchsync_doc;
+			if ($merchsync_type!=$currentSyncType) {
+				throw new \Exception("Type Sync $merchsync_type tidak sesuai dengan $currentSyncType"); 
+			}
+
+
+			$region_id = $id;
+			$endpoint = $this->TransBrowserUrl . '/getstock.php?region_id='. $region_id . '&periode_id=' . $periode_id;
+			log::info("get data from $endpoint");
+			$data = $this->getDataFromUrl($endpoint);
+
+			if (!isset($this->stmt_saldo_del)) {
+				$sql = "delete from tmp_heinvsaldo where region_id=:region_id and periode_id=:periode_id";
+				$stmt = Database::$DbReport->prepare($sql);
+				$this->stmt_saldo_del = $stmt;	
+			}
+
+			$stmt = $this->stmt_saldo_del;
+			$stmt->execute([":region_id" => $region_id, ":periode_id" => $periode_id]);
+		
+			foreach ($data as $row) {
+				$row['region_id'] = $region_id;
+				$row['periode_id'] = $periode_id;
+
+				$obj = $this->createObjectHeinvsaldo($row);
+				if (!isset($this->cmd_heinvsaldo_ins)) {
+					$this->cmd_heinvsaldo_ins = new SqlInsert("tmp_heinvsaldo", $obj);
+					$this->cmd_heinvsaldo_ins->bind(Database::$DbReport);
+				}
+				$this->cmd_heinvsaldo_ins->execute($obj);
+			}
+		} catch (\Exception $ex) {
+			Log::warning($ex->getMessage());
+			throw $ex;
+		}
+	}
+
+
+	public function PrepareItemSaldo(string $merchsync_id, string $merchsync_doc, string $merchsync_type, string $periode_id ) : void {
+		$currentSyncType = 'PREPARE-ITEM-SALDO';
+
+		try {
+			$id = $merchsync_doc;
+			if ($merchsync_type!=$currentSyncType) {
+				throw new \Exception("Type Sync $merchsync_type tidak sesuai dengan $currentSyncType"); 
+			}
+
+
+			$region_id = $id;
+
+			
+			if (!isset($this->stmt_heinvitemsaldo_del)) {
+				$sql = "delete from tmp_heinvitemsaldo where region_id = :region_id and periode_id = :periode_id";
+				$stmt = Database::$DbReport->prepare($sql);
+				$this->stmt_heinvitemsaldo_del = $stmt;
+			}
+
+
+
+			if (!isset($this->stmt_heinvsaldo_list)) {
+				$sql = "select * from tmp_heinvsaldo where region_id = :region_id and periode_id = :periode_id";
+				$stmt = Database::$DbReport->prepare($sql);
+				$this->stmt_heinvsaldo_list = $stmt;
+			}
+
+			$stmt = $this->stmt_heinvsaldo_list;
+			$stmt->execute([":region_id" => $region_id, ":periode_id" => $periode_id]);
+			$rows = $stmt->fetchall();
+			foreach ($rows as $row) {
+			
+
+				$saldo_id = $row['saldo_id'];
+				$branch_id = substr($saldo_id, 15, 7);
+				$row['region_id'] = $region_id;
+				$row['periode_id'] = $periode_id;
+				$row['branch_id'] = $branch_id;
+
+				echo "$saldo_id $periode_id $region_id $branch_id\n";
+			}
+			
+		} catch (\Exception $ex) {
+			Log::error($ex->getMessage());
+			throw $ex;
+		}
+	}
+
 
 	private function AddOrUpdateTempHeinvItem(string $heinvitem_id, array $row) : void {
 		try {
@@ -164,22 +266,23 @@ class SyncSaldo extends SyncBase {
 		$obj->heinv_isnonactive = $row['heinv_isnonactive'];
 		$obj->heinv_iskonsinyasi = $row['heinv_iskonsinyasi'];
 		$obj->heinv_isassembly = $row['heinv_isassembly'];
-		$obj->heinv_priceori = $row['heinv_priceori'];
-		$obj->heinv_price01 = $row['heinv_price01'];
-		$obj->heinv_pricedisc01 = $row['heinv_pricedisc01'];
+		// $obj->heinv_priceori = $row['heinv_priceori'];
+		// $obj->heinv_price01 = $row['heinv_price01'];
+		// $obj->heinv_pricedisc01 = $row['heinv_pricedisc01'];
 		$obj->heinv_produk = $row['heinv_produk'];
 		$obj->heinv_bahan = $row['heinv_bahan'];
 		$obj->heinv_pemeliharaan = $row['heinv_pemeliharaan'];
 		$obj->heinv_logo = $row['heinv_logo'];
 		$obj->heinv_dibuatdi = $row['heinv_dibuatdi'];
-		$obj->heinv_other1 = $row['heinv_other1'];
-		$obj->heinv_other2 = $row['heinv_other2'];
-		$obj->heinv_other3 = $row['heinv_other3'];
-		$obj->heinv_other4 = $row['heinv_other4'];
-		$obj->heinv_other5 = $row['heinv_other5'];
+		$obj->fit = $row['fit'];
+		$obj->pcp_line = $row['pcp_line'];
+		// $obj->heinv_other3 = $row['heinv_other3'];
+		$obj->pcp_gro = $row['pcp_gro'];
+		$obj->pcp_ctg = $row['pcp_ctg'];
 		$obj->heinv_lastrvid = $row['heinv_lastrvid'];
 		$obj->heinv_lastrvdate = $row['heinv_lastrvdate'];
 		$obj->heinv_lastrvqty = $row['heinv_lastrvqty'];
+		$obj->rekanan_id = $row['rekanan_id'];
 		$obj->heinv_lastpriceid = $row['heinv_lastpriceid'];
 		$obj->heinv_lastpricedate = $row['heinv_lastpricedate'];
 		$obj->heinv_lastcost = $row['heinv_lastcost'];
@@ -187,14 +290,14 @@ class SyncSaldo extends SyncBase {
 		$obj->heinv_lastcostdate = $row['heinv_lastcostdate'];
 		$obj->heinvgro_id = $row['heinvgro_id'];
 		$obj->heinvctg_id = $row['heinvctg_id'];
-		$obj->heinv_group1 = $row['heinv_group1'];
-		$obj->heinv_group2 = $row['heinv_group2'];
+		// $obj->heinv_group1 = $row['heinv_group1'];
+		// $obj->heinv_group2 = $row['heinv_group2'];
 		$obj->heinv_gender = $row['heinv_gender'];
-		$obj->heinv_color1 = $row['heinv_color1'];
-		$obj->heinv_color2 = $row['heinv_color2'];
-		$obj->heinv_color3 = $row['heinv_color3'];
+		$obj->heinv_coldescr = $row['heinv_coldescr'];
+		// $obj->heinv_color2 = $row['heinv_color2'];
+		// $obj->heinv_color3 = $row['heinv_color3'];
 		$obj->heinv_hscode_ship = $row['heinv_hscode_ship'];
-		$obj->heinv_plbname = $row['heinv_plbname'];
+		$obj->heinv_label = $row['heinv_label'];
 		$obj->ref_id = $row['ref_id'];
 		$obj->season_id = $row['season_id'];
 		$obj->region_id = $row['region_id'];
@@ -208,7 +311,13 @@ class SyncSaldo extends SyncBase {
 		$obj->deftype_id = $row['deftype_id'];
 		$obj->ref_heinv_id = $row['ref_heinv_id'];
 		$obj->ref_heinvitem_id = $row['ref_heinvitem_id'];
-		
+		$obj->priceori = $row['priceori'];
+		$obj->priceadj = $row['priceadj'];
+		$obj->pricegross = $row['pricegross'];
+		$obj->price = $row['price'];
+		$obj->pricedisc = $row['pricedisc'];
+		$obj->pricenett = $row['pricenett'];
+		$obj->discflag = $row['discflag'];
 
 		return $obj;
 	}
@@ -229,22 +338,23 @@ class SyncSaldo extends SyncBase {
 		$obj->heinv_isnonactive = $row['heinv_isnonactive'];
 		$obj->heinv_iskonsinyasi = $row['heinv_iskonsinyasi'];
 		$obj->heinv_isassembly = $row['heinv_isassembly'];
-		$obj->heinv_priceori = $row['heinv_priceori'];
-		$obj->heinv_price01 = $row['heinv_price01'];
-		$obj->heinv_pricedisc01 = $row['heinv_pricedisc01'];
+		// $obj->heinv_priceori = $row['heinv_priceori'];
+		// $obj->heinv_price01 = $row['heinv_price01'];
+		// $obj->heinv_pricedisc01 = $row['heinv_pricedisc01'];
 		$obj->heinv_produk = $row['heinv_produk'];
 		$obj->heinv_bahan = $row['heinv_bahan'];
 		$obj->heinv_pemeliharaan = $row['heinv_pemeliharaan'];
 		$obj->heinv_logo = $row['heinv_logo'];
 		$obj->heinv_dibuatdi = $row['heinv_dibuatdi'];
-		$obj->heinv_other1 = $row['heinv_other1'];
-		$obj->heinv_other2 = $row['heinv_other2'];
-		$obj->heinv_other3 = $row['heinv_other3'];
-		$obj->heinv_other4 = $row['heinv_other4'];
-		$obj->heinv_other5 = $row['heinv_other5'];
+		$obj->fit = $row['fit'];
+		$obj->pcp_line = $row['pcp_line'];
+		// $obj->heinv_other3 = $row['heinv_other3'];
+		$obj->pcp_gro = $row['pcp_gro'];
+		$obj->pcp_ctg = $row['pcp_ctg'];
 		$obj->heinv_lastrvid = $row['heinv_lastrvid'];
 		$obj->heinv_lastrvdate = $row['heinv_lastrvdate'];
 		$obj->heinv_lastrvqty = $row['heinv_lastrvqty'];
+		$obj->rekanan_id = $row['rekanan_id'];
 		$obj->heinv_lastpriceid = $row['heinv_lastpriceid'];
 		$obj->heinv_lastpricedate = $row['heinv_lastpricedate'];
 		$obj->heinv_lastcost = $row['heinv_lastcost'];
@@ -252,14 +362,14 @@ class SyncSaldo extends SyncBase {
 		$obj->heinv_lastcostdate = $row['heinv_lastcostdate'];
 		$obj->heinvgro_id = $row['heinvgro_id'];
 		$obj->heinvctg_id = $row['heinvctg_id'];
-		$obj->heinv_group1 = $row['heinv_group1'];
-		$obj->heinv_group2 = $row['heinv_group2'];
+		// $obj->heinv_group1 = $row['heinv_group1'];
+		// $obj->heinv_group2 = $row['heinv_group2'];
 		$obj->heinv_gender = $row['heinv_gender'];
-		$obj->heinv_color1 = $row['heinv_color1'];
-		$obj->heinv_color2 = $row['heinv_color2'];
-		$obj->heinv_color3 = $row['heinv_color3'];
+		$obj->heinv_coldescr = $row['heinv_coldescr'];
+		// $obj->heinv_color2 = $row['heinv_color2'];
+		// $obj->heinv_color3 = $row['heinv_color3'];
 		$obj->heinv_hscode_ship = $row['heinv_hscode_ship'];
-		$obj->heinv_plbname = $row['heinv_plbname'];
+		$obj->heinv_label = $row['heinv_label'];
 		$obj->ref_id = $row['ref_id'];
 		$obj->season_id = $row['season_id'];
 		$obj->region_id = $row['region_id'];
@@ -273,8 +383,50 @@ class SyncSaldo extends SyncBase {
 		$obj->deftype_id = $row['deftype_id'];
 		$obj->ref_heinv_id = $row['ref_heinv_id'];
 		$obj->ref_heinvitem_id = $row['ref_heinvitem_id'];
-		
+		$obj->priceori = $row['priceori'];
+		$obj->priceadj = $row['priceadj'];
+		$obj->pricegross = $row['pricegross'];
+		$obj->price = $row['price'];
+		$obj->pricedisc = $row['pricedisc'];
+		$obj->pricenett = $row['pricenett'];
+		$obj->discflag = $row['discflag'];
+		return $obj;
+	}
 
+
+	private function createObjectHeinvsaldo(array $row) : object {
+		$obj = new \stdClass;
+		$obj->saldo_id = $row['saldo_id'];
+		$obj->heinv_id = $row['heinv_id'];
+		$obj->C01 = $row['C01'];
+		$obj->C02 = $row['C02'];
+		$obj->C03 = $row['C03'];
+		$obj->C04 = $row['C04'];
+		$obj->C05 = $row['C05'];
+		$obj->C06 = $row['C06'];
+		$obj->C07 = $row['C07'];
+		$obj->C08 = $row['C08'];
+		$obj->C09 = $row['C09'];
+		$obj->C10 = $row['C10'];
+		$obj->C11 = $row['C11'];
+		$obj->C12 = $row['C12'];
+		$obj->C13 = $row['C13'];
+		$obj->C14 = $row['C14'];
+		$obj->C15 = $row['C15'];
+		$obj->C16 = $row['C16'];
+		$obj->C17 = $row['C17'];
+		$obj->C18 = $row['C18'];
+		$obj->C19 = $row['C19'];
+		$obj->C20 = $row['C20'];
+		$obj->C21 = $row['C21'];
+		$obj->C22 = $row['C22'];
+		$obj->C23 = $row['C23'];
+		$obj->C24 = $row['C24'];
+		$obj->C25 = $row['C25'];
+		$obj->saldodetil_endvalue = $row['saldodetil_endvalue'];
+		$obj->saldodetil_end = $row['saldodetil_end'];
+		$obj->periode_id = $row['periode_id'];
+		$obj->region_id = $row['region_id'];
 		return $obj;
 	}
 

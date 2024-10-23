@@ -158,14 +158,15 @@ class SyncRegister extends SyncBase {
 		$obj->heinv_pemeliharaan = $row['heinv_pemeliharaan'];
 		$obj->heinv_logo = $row['heinv_logo'];
 		$obj->heinv_dibuatdi = $row['heinv_dibuatdi'];
-		$obj->heinv_other1 = $row['heinv_other1'];
-		$obj->heinv_other2 = $row['heinv_other2'];
-		$obj->heinv_other3 = $row['heinv_other3'];
-		$obj->heinv_other4 = $row['heinv_other4'];
-		$obj->heinv_other5 = $row['heinv_other5'];
+		$obj->fit = $row['fit'];
+		$obj->pcp_line = $row['pcp_line'];
+		// $obj->heinv_other3 = $row['heinv_other3'];
+		$obj->pcp_gro = $row['pcp_gro'];
+		$obj->pcp_ctg = $row['pcp_ctg'];
 		$obj->heinv_lastrvid = $row['heinv_lastrvid'];
 		$obj->heinv_lastrvdate = $row['heinv_lastrvdate'];
 		$obj->heinv_lastrvqty = $row['heinv_lastrvqty'];
+		$obj->rekanan_id = $row['rekanan_id'];
 		$obj->heinv_lastpriceid = $row['heinv_lastpriceid'];
 		$obj->heinv_lastpricedate = $row['heinv_lastpricedate'];
 		$obj->heinv_lastcost = $row['heinv_lastcost'];
@@ -173,14 +174,14 @@ class SyncRegister extends SyncBase {
 		$obj->heinv_lastcostdate = $row['heinv_lastcostdate'];
 		$obj->heinvgro_id = $row['heinvgro_id'];
 		$obj->heinvctg_id = $row['heinvctg_id'];
-		$obj->heinv_group1 = $row['heinv_group1'];
-		$obj->heinv_group2 = $row['heinv_group2'];
+		// $obj->heinv_group1 = $row['heinv_group1'];
+		// $obj->heinv_group2 = $row['heinv_group2'];
 		$obj->heinv_gender = $row['heinv_gender'];
-		$obj->heinv_color1 = $row['heinv_color1'];
-		$obj->heinv_color2 = $row['heinv_color2'];
-		$obj->heinv_color3 = $row['heinv_color3'];
+		$obj->heinv_coldescr = $row['heinv_coldescr'];
+		// $obj->heinv_color2 = $row['heinv_color2'];
+		// $obj->heinv_color3 = $row['heinv_color3'];
 		$obj->heinv_hscode_ship = $row['heinv_hscode_ship'];
-		$obj->heinv_plbname = $row['heinv_plbname'];
+		$obj->heinv_label = $row['heinv_label'];
 		$obj->ref_id = $row['ref_id'];
 		$obj->season_id = $row['season_id'];
 		$obj->region_id = $row['region_id'];
@@ -194,7 +195,6 @@ class SyncRegister extends SyncBase {
 		$obj->deftype_id = $row['deftype_id'];
 		$obj->ref_heinv_id = $row['ref_heinv_id'];
 		$obj->ref_heinvitem_id = $row['ref_heinvitem_id'];
-		
 
 		return $obj;
 	}
