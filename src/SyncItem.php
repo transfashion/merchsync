@@ -13,9 +13,12 @@ class SyncItem extends SyncBase {
 	private object $stmt_heinvitem_select;
 	private object $stmt_merchctg_select;
 
+
 	private object $cmd_itemstock_cek;
 	private object $cmd_itemstock_create;
 	private object $cmd_itemstock_update;
+
+	private object $cmd_tmpmerchitem_ins;
 
 	private object $cmd_itemstockbarcode_cek;
 	private object $cmd_itemstockbarcode_create;
@@ -90,8 +93,37 @@ class SyncItem extends SyncBase {
 		}
 	}	
 
-	public function CekHeinvPeriode(string $periode) : void {
+	public function CekHeinvPeriode(string $periode_id) : void {
 		try {
+			
+			log::print("clear tmp_merchitem");
+			$sql = "delete from tmp_merchitem";
+			$stmt = Database::$DbMain->prepare($sql);
+			$stmt->execute();
+
+
+			$sql = "select distinct heinvitem_id from tmp_heinvitemsaldo where periode_id = :periode_id";
+			$stmt = Database::$DbReport->prepare($sql);
+			$stmt->execute([':periode_id' => $periode_id]);
+			$rows = $stmt->fetchAll();
+
+			// masukkan data dulu ke tmp_merchitem
+			log::print("inserting data to tmp_merchitem");
+			foreach ($rows as $row) {
+				$heinvitem_id = $row['heinvitem_id'];
+				$obj = new \stdClass;
+				$obj->merchitem_id = $heinvitem_id;
+				if (!isset($this->cmd_tmpmerchitem_ins)) {
+					$this->cmd_tmpmerchitem_ins = new SqlInsert("tmp_merchitem", $obj);
+					$this->cmd_tmpmerchitem_ins->bind(Database::$DbMain);
+				}
+				$this->cmd_tmpmerchitem_ins->execute($obj);
+			}
+
+
+			// cek apakah semua data di tmp_merchitem sudah ada di mst_merchitem
+
+
 
 		} catch (\Exception $ex) {
 			throw $ex;

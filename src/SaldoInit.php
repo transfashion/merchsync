@@ -93,7 +93,7 @@ class SaldoInit {
 			reset($regions);
 			foreach ($regions as $region_id) {
 				log::print("apply saldo periode $periode region $region_id");
-				$syncItem->ApplySaldo($batchid, $region_id, 'APPLY-SALDO', $periode);
+				// $syncItem->ApplySaldo($batchid, $region_id, 'APPLY-SALDO', $periode);
 			}
 			
 			
