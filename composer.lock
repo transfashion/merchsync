@@ -48,16 +48,16 @@
         },
         {
             "name": "agungdhewe/phpsqlutil",
-            "version": "v1.2.1",
+            "version": "v1.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/agungdhewe/phpsqlutil.git",
-                "reference": "ca59ae059f31851c18e486d54e16d21271d21fdc"
+                "reference": "fc24fa403f7eb954a2e0f7f3d0951ecb6dbbb443"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/agungdhewe/phpsqlutil/zipball/ca59ae059f31851c18e486d54e16d21271d21fdc",
-                "reference": "ca59ae059f31851c18e486d54e16d21271d21fdc",
+                "url": "https://api.github.com/repos/agungdhewe/phpsqlutil/zipball/fc24fa403f7eb954a2e0f7f3d0951ecb6dbbb443",
+                "reference": "fc24fa403f7eb954a2e0f7f3d0951ecb6dbbb443",
                 "shasum": ""
             },
             "require": {
@@ -82,9 +82,9 @@
             "description": "Utility for create SQL insert, update and delete",
             "support": {
                 "issues": "https://github.com/agungdhewe/phpsqlutil/issues",
-                "source": "https://github.com/agungdhewe/phpsqlutil/tree/v1.2.1"
+                "source": "https://github.com/agungdhewe/phpsqlutil/tree/v1.2.2"
             },
-            "time": "2024-10-11T13:04:29+00:00"
+            "time": "2024-10-16T13:21:54+00:00"
         }
     ],
     "packages-dev": [],
