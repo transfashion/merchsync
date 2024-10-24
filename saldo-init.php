@@ -3,12 +3,10 @@
 require_once implode('/', [__DIR__, 'vendor', 'autoload.php']);
 
 
-use AgungDhewe\PhpLogger\Log;
 use AgungDhewe\PhpLogger\Logger;
 use AgungDhewe\PhpLogger\LoggerOutput;
 
 use TransFashion\MerchSync\SaldoInit;
-use TransFashion\MerchSync\Debug;
 use TransFashion\MerchSync\Configuration;
 
 try {
