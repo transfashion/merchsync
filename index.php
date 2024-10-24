@@ -57,9 +57,6 @@ try {
 		Logger::SetOutput(LoggerOutput::FILE);
 	} 
 
-
-
-
 	echo "executing module...";
 	Sync::main();
 	sleep(2);
