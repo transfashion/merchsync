@@ -305,9 +305,6 @@ class SyncSaldo extends SyncBase {
 		$obj->heinv_isnonactive = $row['heinv_isnonactive'];
 		$obj->heinv_iskonsinyasi = $row['heinv_iskonsinyasi'];
 		$obj->heinv_isassembly = $row['heinv_isassembly'];
-		// $obj->heinv_priceori = $row['heinv_priceori'];
-		// $obj->heinv_price01 = $row['heinv_price01'];
-		// $obj->heinv_pricedisc01 = $row['heinv_pricedisc01'];
 		$obj->heinv_produk = $row['heinv_produk'];
 		$obj->heinv_bahan = $row['heinv_bahan'];
 		$obj->heinv_pemeliharaan = $row['heinv_pemeliharaan'];
@@ -315,7 +312,6 @@ class SyncSaldo extends SyncBase {
 		$obj->heinv_dibuatdi = $row['heinv_dibuatdi'];
 		$obj->fit = $row['fit'];
 		$obj->pcp_line = $row['pcp_line'];
-		// $obj->heinv_other3 = $row['heinv_other3'];
 		$obj->pcp_gro = $row['pcp_gro'];
 		$obj->pcp_ctg = $row['pcp_ctg'];
 		$obj->heinv_lastrvid = $row['heinv_lastrvid'];
@@ -329,12 +325,8 @@ class SyncSaldo extends SyncBase {
 		$obj->heinv_lastcostdate = $row['heinv_lastcostdate'];
 		$obj->heinvgro_id = $row['heinvgro_id'];
 		$obj->heinvctg_id = $row['heinvctg_id'];
-		// $obj->heinv_group1 = $row['heinv_group1'];
-		// $obj->heinv_group2 = $row['heinv_group2'];
 		$obj->heinv_gender = $row['heinv_gender'];
 		$obj->heinv_coldescr = $row['heinv_coldescr'];
-		// $obj->heinv_color2 = $row['heinv_color2'];
-		// $obj->heinv_color3 = $row['heinv_color3'];
 		$obj->heinv_hscode_ship = $row['heinv_hscode_ship'];
 		$obj->heinv_label = $row['heinv_label'];
 		$obj->ref_id = $row['ref_id'];
@@ -377,9 +369,6 @@ class SyncSaldo extends SyncBase {
 		$obj->heinv_isnonactive = $row['heinv_isnonactive'];
 		$obj->heinv_iskonsinyasi = $row['heinv_iskonsinyasi'];
 		$obj->heinv_isassembly = $row['heinv_isassembly'];
-		// $obj->heinv_priceori = $row['heinv_priceori'];
-		// $obj->heinv_price01 = $row['heinv_price01'];
-		// $obj->heinv_pricedisc01 = $row['heinv_pricedisc01'];
 		$obj->heinv_produk = $row['heinv_produk'];
 		$obj->heinv_bahan = $row['heinv_bahan'];
 		$obj->heinv_pemeliharaan = $row['heinv_pemeliharaan'];
@@ -387,7 +376,6 @@ class SyncSaldo extends SyncBase {
 		$obj->heinv_dibuatdi = $row['heinv_dibuatdi'];
 		$obj->fit = $row['fit'];
 		$obj->pcp_line = $row['pcp_line'];
-		// $obj->heinv_other3 = $row['heinv_other3'];
 		$obj->pcp_gro = $row['pcp_gro'];
 		$obj->pcp_ctg = $row['pcp_ctg'];
 		$obj->heinv_lastrvid = $row['heinv_lastrvid'];
@@ -401,12 +389,8 @@ class SyncSaldo extends SyncBase {
 		$obj->heinv_lastcostdate = $row['heinv_lastcostdate'];
 		$obj->heinvgro_id = $row['heinvgro_id'];
 		$obj->heinvctg_id = $row['heinvctg_id'];
-		// $obj->heinv_group1 = $row['heinv_group1'];
-		// $obj->heinv_group2 = $row['heinv_group2'];
 		$obj->heinv_gender = $row['heinv_gender'];
 		$obj->heinv_coldescr = $row['heinv_coldescr'];
-		// $obj->heinv_color2 = $row['heinv_color2'];
-		// $obj->heinv_color3 = $row['heinv_color3'];
 		$obj->heinv_hscode_ship = $row['heinv_hscode_ship'];
 		$obj->heinv_label = $row['heinv_label'];
 		$obj->ref_id = $row['ref_id'];

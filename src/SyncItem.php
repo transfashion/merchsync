@@ -13,6 +13,9 @@ class SyncItem extends SyncBase {
 	private object $stmt_heinvitem_select;
 	private object $stmt_merchctg_select;
 
+	private object $stmt_mercharticle_check;
+	private object $stmt_merchitem_check;
+
 
 	private object $cmd_itemstock_cek;
 	private object $cmd_itemstock_create;
@@ -22,6 +25,12 @@ class SyncItem extends SyncBase {
 
 	private object $cmd_itemstockbarcode_cek;
 	private object $cmd_itemstockbarcode_create;
+
+	private object $cmd_mercharticle_create;
+	private object $cmd_mercharticle_update;
+	private object $cmd_merchitem_create;
+	private object $cmd_merchitem_update;
+	
 
 	private object $rc;
 	private array $fix_size = [];
@@ -70,6 +79,7 @@ class SyncItem extends SyncBase {
 			$rows = $stmt->fetchAll();
 			foreach ($rows as $row) {
 				$heinv_id = $row['heinv_id'];
+
 				log::info("setup heinv $heinv_id");
 				$this->SetupMerchArticle($heinv_id, $row);
 
@@ -154,6 +164,8 @@ class SyncItem extends SyncBase {
 
 	private function SetupMerchArticle(string $mercharticle_id, array &$row) : void {
 		try {
+			$row['mercharticle_id'] = $mercharticle_id;
+
 			$map_kategori = $this->rc->getMapKategori();
 			$map_season = $this->rc->getMapSeason();
 			$map_rekanan = $this->rc->getMapRekanan();
@@ -211,9 +223,35 @@ class SyncItem extends SyncBase {
 			$row['unit_id'] = $row_merchctg['unit_id'];
 			
 
-
-
 			// setup mercharticle
+
+			// cek dulu apakah $mercharticle_id sudah ada di table fns_mercharticle
+			$obj = $this->createMercharticleObject($row);
+			$cek = new \stdClass;
+			$cek->mercharticle_id = $mercharticle_id;
+			if (!isset($this->stmt_mercharticle_check)) {
+				$this->stmt_mercharticle_check = new SqlSelect("fsn_mercharticle", $cek);
+				$this->stmt_mercharticle_check->bind(Database::$DbMain);
+			}
+			$this->stmt_mercharticle_check->execute($cek);
+			$row_mercharticle_cek = $this->stmt_mercharticle_check->fetch();
+			if ($row_mercharticle_cek==null) {
+				// mercharticle belum ada, insert
+				if (!isset($this->cmd_mercharticle_create)) {
+					$this->cmd_mercharticle_create = new SqlInsert("fsn_mercharticle", $obj);
+					$this->cmd_mercharticle_create->bind(Database::$DbMain);
+				}
+				$this->cmd_mercharticle_create->execute($obj);
+
+			} else {
+				// mercharticle sudah ada, update
+				if (!isset($this->cmd_mercharticle_update)) {
+					$this->cmd_mercharticle_update = new SqlUpdate("fsn_mercharticle", $obj, ['mercharticle_id']);
+					$this->cmd_mercharticle_update->bind(Database::$DbMain);
+				}
+				$this->cmd_mercharticle_update->execute($obj);
+			}
+
 
 		} catch (\Exception $ex) {
 			throw $ex;
@@ -235,8 +273,30 @@ class SyncItem extends SyncBase {
 			$this->SetupItemstock($itemstock_id, $row);
 
 			// create merchitem
-
-			
+			$obj = $this->createMerchitemObject($row);
+			$cek = new \stdClass;
+			$cek->merchitem_id = $merchitem_id;
+			if (!isset($this->stmt_merchitem_check)) {
+				$this->stmt_merchitem_check = new SqlSelect("fsn_merchitem", $cek);
+				$this->stmt_merchitem_check->bind(Database::$DbMain);
+			}
+			$this->stmt_merchitem_check->execute($cek);
+			$row_merchitem_cek = $this->stmt_merchitem_check->fetch();
+			if ($row_merchitem_cek==null) {
+				// merchitem belum ada, create
+				if (!isset($this->cmd_merchitem_create)) {
+					$this->cmd_merchitem_create = new SqlInsert("fsn_merchitem", $obj);
+					$this->cmd_merchitem_create->bind(Database::$DbMain);
+				}
+				$this->cmd_merchitem_create->execute($obj);
+			} else {
+				// merchitem sudah ada, update
+				if (!isset($this->cmd_merchitem_update)) {
+					$this->cmd_merchitem_update = new SqlUpdate("fsn_merchitem", $obj, ['merchitem_id']);
+					$this->cmd_merchitem_update->bind(Database::$DbMain);
+				}
+				$this->cmd_merchitem_update->execute($obj);
+			}
 
 
 		} catch (\Exception $ex) {
@@ -408,15 +468,11 @@ class SyncItem extends SyncBase {
 		$obj->unit_id = $row['unit_id'];
 		$obj->brand_id = $row['brand_id'];
 		$obj->unitmeasurement_id = 'PCS';
-		// $obj->itemstock_couchdbid = $row[''];
-		// $obj->itemstock_picture = $row[''];
 		$obj->itemstock_source = 'TB';
-		// $obj->itemstock_isdisabled = $row[''];
-		// $obj->itemstock_ishascompound = $row[''];
+		$obj->itemstock_isdisabled = $row['heinv_isdisabled'];
 		$obj->itemstock_issellable = 1;
 		$obj->itemstock_priceori = $row['priceori'];
 		$obj->itemstock_priceadj = $row['priceadj'];
-		// $obj->itemstock_priceadjdate = $row[''];
 		$obj->itemstock_grossprice = $row['pricegross'];
 		$obj->itemstock_disc = $row['pricedisc'];
 		$obj->itemstock_discval = $row['pricegross'] - $row['price'];
@@ -427,21 +483,60 @@ class SyncItem extends SyncBase {
 		$obj->itemstock_length = $row['heinv_length'];
 		$obj->itemstock_width = $row['heinv_width'];
 		$obj->itemstock_height = $row['heinv_height'];
-		// $obj->itemstock_lastqty = $row['heinv_lastrvqty'];
-		// $obj->itemstock_lastvalue = $row[''];
-		// $obj->itemstock_lastqtyupdate = $row[''];
-		// $obj->itemstock_isupdating = $row[''];
-		// $obj->itemstock_updatebatch = $row[''];
 		$obj->itemstock_lastrecvid = $row['heinv_lastrvid'];
 		$obj->itemstock_lastrecvdate = $row['heinv_lastrvdate'];
 		$obj->itemstock_lastrecvqty = $row['heinv_lastrvqty'];
 		$obj->itemstock_lastcost = $row['heinv_lastcost'];
 		$obj->_createby = '5effbb0a0f7d1';
-		// $obj->itemstock_lastcostdate = $row[''];
 
 		return $obj;
 	}
 
+	public function createMercharticleObject(array $row) : object {
+		$obj = new \stdClass;
+
+		$obj->mercharticle_id = $row['mercharticle_id'];
+		$obj->mercharticle_art = $row['heinv_art'];
+		$obj->mercharticle_mat = $row['heinv_mat'];
+		$obj->mercharticle_col = $row['heinv_col'];
+		$obj->mercharticle_name = $row['heinv_name'];
+		$obj->mercharticle_descr = $row['heinv_webdescr'];
+		$obj->mercharticle_isdisabled = $row['heinv_isdisabled'];
+		$obj->mercharticle_pcpline = $row['pcp_line'];
+		$obj->mercharticle_pcpgroup = $row['pcp_gro'];
+		$obj->mercharticle_pcpcategory = $row['pcp_ctg'];
+		$obj->mercharticle_gender = $row['heinv_gender'];
+		$obj->mercharticle_fit = $row['fit'];
+		$obj->mercharticle_hscodeship = $row['heinv_hscode_ship'];
+		$obj->mercharticle_hscodeina = $row['heinv_hscode_ina'];
+		$obj->mercharticle_labelname = $row['heinv_label'];
+		$obj->mercharticle_labelproduct = $row['heinv_produk'];
+		$obj->mercharticle_bahan = $row['heinv_bahan'];
+		$obj->mercharticle_pemeliharaan = $row['heinv_pemeliharaan'];
+		$obj->mercharticle_logo = $row['heinv_logo'];
+		$obj->mercharticle_dibuatdi = $row['heinv_dibuatdi'];
+		$obj->merchctg_id = $row['merchctg_id'];
+		$obj->merchsea_id = $row['merchsea_id'];
+		$obj->unit_id = $row['unit_id'];
+		$obj->brand_id = $row['brand_id'];
+		$obj->dept_id = $row['dept_id'];
+		$obj->_createby = '5effbb0a0f7d1';
+
+		return $obj;
+	}
+
+	public function createMerchItemObject(array $row) : object {
+		$obj = new \stdClass;
+		$obj->merchitem_id = $row['heinvitem_id']; 
+		$obj->merchitem_size = $row['heinv_size'];
+		$obj->merchitem_isdisabled = $row['heinv_isdisabled'];
+		$obj->unit_id = $row['unit_id'];
+		$obj->brand_id = $row['brand_id'];
+		$obj->dept_id = $row['dept_id'];
+		$obj->mercharticle_id = $row['heinv_id'];
+		$obj->_createby = '5effbb0a0f7d1';
+		return $obj;
+	}
 
 
 }

@@ -44,6 +44,7 @@ create table tmp_heinvitem (
 	-- heinv_color2 varchar(30),
 	-- heinv_color3 varchar(30),
 	heinv_hscode_ship bigint,
+	heinv_hscode_ina bigint,
 	heinv_label varchar(100),
 	ref_id varchar(30),
 	season_id varchar(10),
