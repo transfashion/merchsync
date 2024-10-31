@@ -2,37 +2,51 @@
 
 use AgungDhewe\PhpLogger\Log;
 
-use AgungDhewe\PhpSqlUtil\SqlDelete;
 use AgungDhewe\PhpSqlUtil\SqlInsert;
 use AgungDhewe\PhpSqlUtil\SqlUpdate;
 use AgungDhewe\PhpSqlUtil\SqlSelect;
 
 class SyncItem extends SyncBase {
 
-	private object $stmt_heinv_select;
-	private object $stmt_heinvitem_select;
-	private object $stmt_merchctg_select;
+	private \PDOStatement $stmt_heinv_select;
+	private \PDOStatement $stmt_heinvitem_select;
+	private \PDOStatement $stmt_merchctg_select;
 
-	private object $stmt_mercharticle_check;
-	private object $stmt_merchitem_check;
+	private \PDOStatement $stmt_itemstockcost_list;
+	private \PDOStatement $stmt_itemstockcost_del;
+
+	private \PDOStatement $stmt_itemstocksaldo_list;
+	private \PDOStatement $stmt_itemstocksaldo_del;
 
 
-	private object $cmd_itemstock_cek;
-	private object $cmd_itemstock_create;
-	private object $cmd_itemstock_update;
+	private SqlUpdate $cmd_heinvsaldo_periodeupdate;
+	private SqlUpdate $cmd_heinvitemsaldo_periodeupdate;
 
-	private object $cmd_tmpmerchitem_ins;
+	private SqlSelect $cmd_merchitem_check;
+	private SqlSelect $cmd_mercharticle_check;
 
-	private object $cmd_itemstockbarcode_cek;
-	private object $cmd_itemstockbarcode_create;
+	private SqlSelect $cmd_itemstock_cek;
+	private SqlInsert $cmd_itemstock_create;
+	private SqlUpdate $cmd_itemstock_update;
 
-	private object $cmd_mercharticle_create;
-	private object $cmd_mercharticle_update;
-	private object $cmd_merchitem_create;
-	private object $cmd_merchitem_update;
+	private SqlInsert $cmd_tmpmerchitem_ins;
+
+	private SqlSelect $cmd_itemstockbarcode_cek;
+	private SqlInsert $cmd_itemstockbarcode_create;
+
+	private SqlInsert $cmd_mercharticle_create;
+	private SqlUpdate $cmd_mercharticle_update;
+	private SqlInsert $cmd_merchitem_create;
+	private SqlUpdate $cmd_merchitem_update;
+	
+	private SqlSelect $cmd_itemstockperiode_cek;
+	private SqlInsert $cmd_itemstockperiode_create;
+
+	private SqlInsert $cmd_itemstockcost_create; 
+	private SqlInsert $cmd_itemstocksaldo_create; 
 	
 
-	private object $rc;
+	private RelationChecker $rc;
 	private array $fix_size = [];
 
 	function __construct() {
@@ -132,15 +146,30 @@ class SyncItem extends SyncBase {
 
 
 			// cek apakah semua data di tmp_merchitem sudah ada di mst_merchitem
-
-
+			$sql = "
+				select 
+				A.merchitem_id
+				from 
+				tmp_merchitem A left join fsn_merchitem B on B.merchitem_id = A.merchitem_id 
+				WHERE 
+				B.merchitem_id is null;
+			";
+			$stmt = Database::$DbMain->prepare($sql);
+			$stmt->execute();
+			$rows = $stmt->fetchAll();
+			if (count($rows)>0) {
+				foreach ($rows as $row) {
+					log::print($row['merchitem_id']);
+				}
+				throw new \Exception("ada beberapa items yang belum di set di fsn_merchitem");
+			}
 
 		} catch (\Exception $ex) {
 			throw $ex;
 		}
 	}
 
-	public function ApplySaldo(string $merchsync_id, string $merchsync_doc, string $merchsync_type, string $periode_id ) : void {
+	public function ApplySaldoPeriode(string $merchsync_id, string $merchsync_doc, string $merchsync_type, string $periode_id ) : void {
 		$currentSyncType = 'APPLY-SALDO';
 
 		try {
@@ -151,8 +180,15 @@ class SyncItem extends SyncBase {
 			}
 
 			$region_id = $id;
+		
+			$map_periode = $this->rc->getMapPeriode();
+			$periodemo_id = $map_periode[$periode_id];
 
-			
+			// Update temporary saldo periode
+			$this->updateTempPeriodemo($region_id, $periode_id, $periodemo_id);
+
+			// masukkan data ke mst_itemstockperiode, mst_itemstockcost, mst_itemstocksaldo
+			$this->SetupItemstockPeriode($region_id, $periodemo_id);
 
 		} catch (\Exception $ex) {
 			throw $ex;
@@ -189,6 +225,8 @@ class SyncItem extends SyncBase {
 			if (!array_key_exists($region_id, $map_brand)) {
 				throw new \Exception("brand [$region_id] belum di map");
 			}
+			
+			// TODO: edit map brand, agar ada brand_id dan dept_id
 			$row['brand_id'] = $map_brand[$region_id];
 
 
@@ -229,12 +267,12 @@ class SyncItem extends SyncBase {
 			$obj = $this->createMercharticleObject($row);
 			$cek = new \stdClass;
 			$cek->mercharticle_id = $mercharticle_id;
-			if (!isset($this->stmt_mercharticle_check)) {
-				$this->stmt_mercharticle_check = new SqlSelect("fsn_mercharticle", $cek);
-				$this->stmt_mercharticle_check->bind(Database::$DbMain);
+			if (!isset($this->cmd_mercharticle_check)) {
+				$this->cmd_mercharticle_check = new SqlSelect("fsn_mercharticle", $cek);
+				$this->cmd_mercharticle_check->bind(Database::$DbMain);
 			}
-			$this->stmt_mercharticle_check->execute($cek);
-			$row_mercharticle_cek = $this->stmt_mercharticle_check->fetch();
+			$this->cmd_mercharticle_check->execute($cek);
+			$row_mercharticle_cek = $this->cmd_mercharticle_check->fetch();
 			if ($row_mercharticle_cek==null) {
 				// mercharticle belum ada, insert
 				if (!isset($this->cmd_mercharticle_create)) {
@@ -276,12 +314,12 @@ class SyncItem extends SyncBase {
 			$obj = $this->createMerchitemObject($row);
 			$cek = new \stdClass;
 			$cek->merchitem_id = $merchitem_id;
-			if (!isset($this->stmt_merchitem_check)) {
-				$this->stmt_merchitem_check = new SqlSelect("fsn_merchitem", $cek);
-				$this->stmt_merchitem_check->bind(Database::$DbMain);
+			if (!isset($this->cmd_merchitem_check)) {
+				$this->cmd_merchitem_check = new SqlSelect("fsn_merchitem", $cek);
+				$this->cmd_merchitem_check->bind(Database::$DbMain);
 			}
-			$this->stmt_merchitem_check->execute($cek);
-			$row_merchitem_cek = $this->stmt_merchitem_check->fetch();
+			$this->cmd_merchitem_check->execute($cek);
+			$row_merchitem_cek = $this->cmd_merchitem_check->fetch();
 			if ($row_merchitem_cek==null) {
 				// merchitem belum ada, create
 				if (!isset($this->cmd_merchitem_create)) {
@@ -402,7 +440,238 @@ class SyncItem extends SyncBase {
 		}
 	}
 
+	private function updateTempPeriodemo(string $region_id, string $periode_id, string $periodemo_id) : void {
+		
+		try {
+			$obj = new \stdClass;
+			$obj->region_id = $region_id;
+			$obj->periode_id = $periode_id;
+			$obj->periodemo_id = $periodemo_id;
 
+			if (!isset($this->cmd_heinvsaldo_periodeupdate)) {
+				$this->cmd_heinvsaldo_periodeupdate = new SqlUpdate("tmp_heinvsaldo", $obj, ['region_id','periode_id']);
+				$this->cmd_heinvsaldo_periodeupdate->bind(Database::$DbReport);
+			}
+
+			if (!isset($this->cmd_heinvitemsaldo_periodeupdate)) {
+				$this->cmd_heinvitemsaldo_periodeupdate = new SqlUpdate("tmp_heinvitemsaldo", $obj, ['region_id', 'periode_id']);
+				$this->cmd_heinvitemsaldo_periodeupdate->bind(Database::$DbReport);
+			}
+
+			$this->cmd_heinvsaldo_periodeupdate->execute($obj);
+			$this->cmd_heinvitemsaldo_periodeupdate->execute($obj);
+
+		} catch (\Exception $ex) {
+			throw $ex;
+		}
+	}
+
+
+	private function SetupItemstockPeriode(string $region_id, string $periodemo_id) : void {
+		log::info("SetupItemstock $region_id Periode $periodemo_id");
+
+		try {
+			$row = [
+				'region_id' => $region_id,
+				'periodemo_id' => $periodemo_id
+			];
+
+
+			// $obj = createItemstockPeriode($row);
+			$map_unit = $this->rc->getMapUnit();
+			$data = $map_unit[$region_id];
+			$dept_id = $data['dept_id'];
+
+			$row = [
+				'itemstockperiode_id' => null,
+				'dept_id' => $dept_id,
+				'periodemo_id' => $periodemo_id
+			];
+			$obj = $this->createItemstockPeriodeObject($row);
+			if (!isset($this->cmd_itemstockperiode_create)) {
+				$this->cmd_itemstockperiode_create = new SqlInsert("mst_itemstockperiode", $obj);
+				$this->cmd_itemstockperiode_create->bind(Database::$DbMain);
+			}
+
+
+
+
+			$cek = new \stdClass;
+			$cek->dept_id = $dept_id;
+			$cek->periodemo_id = $periodemo_id;
+			if (!isset($this->cmd_itemstockperiode_cek)) {
+				$this->cmd_itemstockperiode_cek = new SqlSelect("mst_itemstockperiode", $cek);
+				$this->cmd_itemstockperiode_cek->bind(Database::$DbMain);
+			}
+			$this->cmd_itemstockperiode_cek->execute($cek);
+			$row_itemstockperiode_cek = $this->cmd_itemstockperiode_cek->fetch();
+			if (empty($row_itemstockperiode_cek)) {
+				// buat baru
+				$obj->itemstockperiode_id = uniqid();
+				$this->cmd_itemstockperiode_create->execute($obj);
+			}  else {
+				$obj->itemstockperiode_id = $row_itemstockperiode_cek['itemstockperiode_id'];
+			}
+
+
+			// hapus dulu data itemstockcost dengan region dan periode ini
+			if (!isset($this->stmt_itemstockcost_del)) {
+				$sql = "delete from mst_itemstockcost where dept_id=:dept_id and itemstockperiode_id=:itemstockperiode_id";
+				$stmt = Database::$DbMain->prepare($sql);
+				$this->stmt_itemstockcost_del = $stmt;	
+			}
+			$stmt = $this->stmt_itemstockcost_del;
+			$stmt->execute([
+				':dept_id' => $dept_id,
+				':itemstockperiode_id' => $obj->itemstockperiode_id
+			]);
+
+
+			// hapus itemstocksaldo
+			if (!isset($this->stmt_itemstocksaldo_del)) {
+				$sql = "delete from mst_itemstocksaldo where dept_id=:dept_id and itemstockperiode_id=:itemstockperiode_id";
+				$stmt = Database::$DbMain->prepare($sql);
+				$this->stmt_itemstocksaldo_del = $stmt;	
+			}
+			$stmt = $this->stmt_itemstocksaldo_del;
+			$stmt->execute([
+				':dept_id' => $dept_id,
+				':itemstockperiode_id' => $obj->itemstockperiode_id
+			]);
+
+			$this->SetupItemstockCost($obj->itemstockperiode_id, $region_id, $dept_id, $periodemo_id);
+			$this->SetupItemstockSaldo($obj->itemstockperiode_id, $region_id, $dept_id, $periodemo_id);
+
+		} catch (\Exception $ex) {
+			log::warning($ex->getMessage());
+			throw $ex;
+		}
+	}
+
+	private function SetupItemstockCost(string $itemstockperiode_id, string $region_id, string $dept_id, string $periodemo_id) : void {
+		log::info("SetupItemstockCost $region_id Periode $periodemo_id");
+		
+		try {
+			// ambil data dari temp saldo
+			if (!isset($this->stmt_itemstockcost_list)) {
+				$sql = "
+					select
+					heinvitem_id,
+					sum(end_qty) as end_qty,
+					sum(end_value) as end_value
+					from tmp_heinvitemsaldo 
+					where 
+					region_id = :region_id and periodemo_id = :periodemo_id
+					group by
+					heinvitem_id				
+				";
+				$stmt = Database::$DbReport->prepare($sql);
+				$this->stmt_itemstockcost_list = $stmt;
+			}
+
+			$stmt = $this->stmt_itemstockcost_list;
+			$stmt->execute([
+				':region_id' => $region_id,
+				':periodemo_id' => $periodemo_id
+			]);
+			$rows = $stmt->fetchall();
+			foreach ($rows as $row) {
+				$qty = (int)$row['end_qty'];
+				$value = (float)$row['end_value'];
+				$cost = (float)0;
+				if ($qty!=0) {
+					$cost = $value / $qty ;
+				}
+
+				$row['itemstockperiode_id'] = $itemstockperiode_id;
+				$row['dept_id'] = $dept_id;
+				$row['periodemo_id'] = $periodemo_id;
+				$row['itemstock_id'] = $row['heinvitem_id'];
+				$row['valueperitem'] = $cost;
+				$row['saldoqty'] = $qty;
+				$row['saldovalue'] = $value;
+
+				$obj = $this->createItemstockCostObject($row);	
+				if (!isset($this->cmd_itemstockcost_create)) {
+					$this->cmd_itemstockcost_create = new SqlInsert("mst_itemstockcost", $obj);
+					$this->cmd_itemstockcost_create->bind(Database::$DbMain);
+				}
+				
+				$obj->itemstockcost_id = uniqid();
+				$this->cmd_itemstockcost_create->execute($obj);
+			}
+		} catch (\Exception $ex) {
+			log::warning($ex->getMessage());
+			throw $ex;
+		}
+	}
+
+	private function SetupItemstockSaldo(string $itemstockperiode_id, string $region_id, string $dept_id,  string $periodemo_id) : void {
+		log::info("SetupItemstockSaldo $region_id Periode $periodemo_id");
+		
+		try {
+			$map_site = $this->rc->getMapSite();
+
+
+			if (!isset($this->stmt_itemstocksaldo_list)) {
+				$sql = "
+					select
+					branch_id,
+					heinvitem_id,
+					sum(end_qty) as end_qty,
+					sum(end_value) as end_value
+					from tmp_heinvitemsaldo 
+					where 
+					region_id = :region_id and periodemo_id = :periodemo_id
+					group by
+					branch_id, heinvitem_id				
+				";
+				$stmt = Database::$DbReport->prepare($sql);
+				$this->stmt_itemstocksaldo_list = $stmt;
+			}
+
+			$stmt = $this->stmt_itemstocksaldo_list;
+			$stmt->execute([
+				':region_id' => $region_id,
+				':periodemo_id' => $periodemo_id
+			]);
+			$rows = $stmt->fetchall();
+			foreach ($rows as $row) {
+				$qty = (int)$row['end_qty'];
+				$value = (float)$row['end_value'];
+				$cost = (float)0;
+				if ($qty!=0) {
+					$cost = $value / $qty ;
+				}
+
+				$branch_id = $row['branch_id'];
+				$regionbranch = "$region_id:$branch_id";
+				$data = $map_site[$regionbranch];
+				$site_id = $data['site_id'];
+
+				$row['itemstockperiode_id'] = $itemstockperiode_id;
+				$row['dept_id'] = $dept_id;
+				$row['site_id'] = $site_id;
+				$row['periodemo_id'] = $periodemo_id;
+				$row['itemstock_id'] = $row['heinvitem_id'];
+				$row['valueperitem'] = $cost;
+				$row['saldoqty'] = $qty;
+				$row['saldovalue'] = $value;
+
+				$obj = $this->createItemstockSaldoObject($row);	
+				if (!isset($this->cmd_itemstocksaldo_create)) {
+					$this->cmd_itemstocksaldo_create = new SqlInsert("mst_itemstocksaldo", $obj);
+					$this->cmd_itemstocksaldo_create->bind(Database::$DbMain);
+				}
+				
+				$obj->itemstocksaldo_id = uniqid();
+				$this->cmd_itemstocksaldo_create->execute($obj);
+			}
+		} catch (\Exception $ex) {
+			log::warning($ex->getMessage());
+			throw $ex;
+		}
+	}
 
 
 	public function CekData(string $batchid, string $region_id, string $periode_id) : void {
@@ -411,7 +680,10 @@ class SyncItem extends SyncBase {
 			$this->rc->cekSeason($region_id);
 			$this->rc->cekRekanan($region_id);
 			$this->rc->cekBrand($region_id);
+			$this->rc->cekUnit($region_id);
 			$this->rc->cekSite($region_id, $periode_id);
+			$this->rc->cekPeriode($periode_id);
+			
 		} catch (\Exception $ex) {
 			throw $ex;
 		}
@@ -538,5 +810,42 @@ class SyncItem extends SyncBase {
 		return $obj;
 	}
 
+	public function createItemstockPeriodeObject(array $row) : object {
+		$obj = new \stdClass;
+		$obj->itemstockperiode_id = $row['itemstockperiode_id'];
+		$obj->periodemo_id = $row['periodemo_id'];
+		$obj->dept_id = $row['dept_id'];
+		$obj->_createby = '5effbb0a0f7d1';
+		return $obj;
+	}
+
+	private function createItemstockCostObject(array $row) : object {
+		$obj = new \stdClass;
+		$obj->itemstockcost_id = null;
+		$obj->dept_id = $row['dept_id'];
+		$obj->itemstock_id = $row['itemstock_id'];
+		$obj->itemstockcost_valueperitem = $row['valueperitem'];
+		$obj->itemstockcost_saldoqty = $row['saldoqty'];
+		$obj->itemstockcost_saldovalue = $row['saldovalue'];
+		$obj->itemstockperiode_id = $row['itemstockperiode_id'];
+		$obj->_createby = '5effbb0a0f7d1';
+
+		return $obj;
+	}
+
+	private function createItemstockSaldoObject(array $row) : object {
+		$obj = new \stdClass;
+		$obj->itemstocksaldo_id = null;
+		$obj->dept_id = $row['dept_id'];
+		$obj->site_id = $row['site_id'];
+		$obj->itemstock_id = $row['itemstock_id'];
+		$obj->itemstocksaldo_valueperitem = $row['valueperitem'];
+		$obj->itemstocksaldo_qty = $row['saldoqty'];
+		$obj->itemstocksaldo_value = $row['saldovalue'];
+		$obj->itemstockperiode_id = $row['itemstockperiode_id'];
+		$obj->_createby = '5effbb0a0f7d1';
+
+		return $obj;
+	}
 
 }

@@ -57,8 +57,32 @@ try {
 		Logger::SetOutput(LoggerOutput::FILE);
 	} 
 
+	$params = [
+		'tb_inv_periode' => '20240930',
+		'regions' => [
+			'00700',
+			'00900',
+			'01100',
+			'01110',
+			'01130',
+			'01400',
+			'01500',
+			'01510',
+			'01800',
+			'02500',
+			'02600',
+			'03400',
+			'03700',
+			'03800',
+			'03900',
+			'04000',
+			'04210'
+		]
+	];
+
+
 	echo "executing module...";
-	SaldoInit::main();
+	SaldoInit::main($params);
 	sleep(2);
 	echo "DONE.";
 } catch (Exception $ex) {

@@ -2,7 +2,6 @@
 
 use AgungDhewe\PhpLogger\Log;
 
-use AgungDhewe\PhpSqlUtil\SqlDelete;
 use AgungDhewe\PhpSqlUtil\SqlInsert;
 use AgungDhewe\PhpSqlUtil\SqlUpdate;
 use AgungDhewe\PhpSqlUtil\SqlSelect;

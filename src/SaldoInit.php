@@ -11,36 +11,17 @@ class SaldoInit {
 	private static SyncItem $syncItem;
 	
 
-	public static function main() : void {	
+	public static function main(array $params) : void {	
 		try {
 			Log::info('Initialize Saldo Inventory starting');
 			Database::Connect();
 
-			$periode = '20240930';
+			$batchid = uniqid();
+			$periode = $params['tb_inv_periode'];
+			$regions = $params['regions'];
 
 			self::$syncSaldo = new SyncSaldo();
 			self::$syncItem = new SyncItem();
-
-			$batchid = uniqid();
-			$regions = [
-				'00700',
-				'00900',
-				'01100',
-				'01110',
-				'01130',
-				'01400',
-				'01500',
-				'01510',
-				'01800',
-				'02500',
-				'02600',
-				'03400',
-				'03700',
-				'03800',
-				'03900',
-				'04000',
-				'04210'
-			];
 
 
 			//self::getActiveItem($batchid, $regions);							// ambil data master item aktiv dari transbrowser
@@ -49,7 +30,7 @@ class SaldoInit {
 			//self::PrepareTemporaryItemSaldo($batchid, $regions, $periode);		// siapkan data saldo per item (sizing) di temporary table
 			//self::SetupMerchItem($batchid, $regions, $periode);					// setup master itemstock, merchitem, mercharticle di main database
 			self::CekPeriodeSaldoMerchItemIntegrity($periode);					// cek heinvitem di tmp_heinvitemsaldo apakah sudah ada semua di merchitem
-			self::ApplyItemStockMoving($batchid, $regions, $periode);			// apply saldo dari tmp_heinvitemsaldo ke itemstockmoving main database
+			self::ApplyItemStockPeriode($batchid, $regions, $periode);			// apply saldo dari tmp_heinvitemsaldo ke itemstockmoving main database
 			
 			Log::info('DONE.');
 		} catch (\Exception $e) {
@@ -111,11 +92,11 @@ class SaldoInit {
 
 	}
 
-	private static function ApplyItemStockMoving(string $batch_id, array $regions, string $periode_id) : void {
+	private static function ApplyItemStockPeriode(string $batch_id, array $regions, string $periode_id) : void {
 		reset($regions);
 		foreach ($regions as $region_id) {
 			log::print("apply saldo periode $periode_id region $region_id");
-			self::$syncItem->ApplySaldo($batch_id, $region_id, 'APPLY-SALDO', $periode_id);
+			self::$syncItem->ApplySaldoPeriode($batch_id, $region_id, 'APPLY-SALDO', $periode_id);
 		}
 	}
 

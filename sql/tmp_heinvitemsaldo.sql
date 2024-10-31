@@ -1,5 +1,6 @@
 create table tmp_heinvitemsaldo (
 	periode_id varchar(10) not null,
+	periodemo_id varchar(6) not null,
 	region_id varchar(5) not null, 
 	branch_id varchar(7) not null, 
 	heinv_id varchar(13) not null, 

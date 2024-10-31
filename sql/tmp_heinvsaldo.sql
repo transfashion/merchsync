@@ -34,6 +34,7 @@ create table tmp_heinvsaldo (
 	saldodetil_endvalue decimal(15, 2) not null default 0,
 	saldodetil_end int not null default 0,
 	periode_id varchar(10) not null,
+	periodemo_id varchar(6) not null,
 	region_id varchar(5) not null,
 	PRIMARY key(saldo_id, heinv_id)
 ) engine=MyISAM COMMENT='Table Temporary untuk data item saldo';

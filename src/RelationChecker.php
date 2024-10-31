@@ -15,9 +15,13 @@ class RelationChecker {
 	private object $stmt_rekananref_cek;
 
 	private object $stmt_brandref_cek;
+	private object $stmt_unitref_cek;
 
 	private object $stmt_regionbranch_list;
 	private object $stmt_regionbranch_cek;
+
+	private object $stmt_perioderef_cek;
+	
 
 
 	private array $error_season = [];
@@ -25,6 +29,8 @@ class RelationChecker {
 	private array $error_kategori = [];
 	private array $error_brand = [];
 	private array $error_site = [];
+	private array $error_periode = [];
+	private array $error_unit = [];
 	
 	
 	private array $map_season = [];
@@ -32,6 +38,8 @@ class RelationChecker {
 	private array $map_kategori = [];
 	private array $map_site = [];
 	private array $map_brand = [];
+	private array $map_periode = [];
+	private array $map_unit = [];
 
 
 	public function cekBrand(string $region_id) : void {
@@ -61,6 +69,46 @@ class RelationChecker {
 			throw $ex;
 		}
 	}
+
+	public function cekUnit(string $region_id) : void {
+		try {
+			if (!isset($this->stmt_unitref_cek)) {
+				$sql = "
+					select * from mst_unitref 
+					where 
+						interface_id='TB' 
+					and unitref_name='region_id' 
+					and unitref_code=:region_id
+				";
+				$stmt = Database::$DbMain->prepare($sql);
+				$this->stmt_unitref_cek = $stmt;
+			}
+
+			$stmt = $this->stmt_unitref_cek;
+			$stmt->execute([":region_id" => $region_id]);
+			$row_unit = $stmt->fetch();
+			if ($row_unit==null) {
+				$this->error_unit[] = $region_id;
+			} else {
+				$unit_id = $row_unit['unit_id'];
+				$unit_otherdata = $row_unit['unitref_otherdata'];
+					
+				$data = [];
+				preg_match_all('/([\w_]+):([^;]+)/', $unit_otherdata, $matches);
+				for ($i = 0; $i < count($matches[1]); $i++) {
+					$data[$matches[1][$i]] = $matches[2][$i];
+				}
+				if (!array_key_exists('dept_id', $data)) {
+					throw new \Exception("dept_id not found in unitref_otherdata at unit $unit_id");
+				}
+				$data['unit_id'] = $unit_id;
+				$this->map_unit[$region_id] = $data;
+			}
+		} catch (\Exception $ex) {
+			throw $ex;
+		}
+	}
+
 	public function cekKategori(string $region_id) : void {
 		log::info("[$region_id] cek kategori");
 		try {
@@ -237,9 +285,17 @@ class RelationChecker {
 				} else {
 					$site_id = $row_regionbranch['site_id'];
 					$site_otherdata = $row_regionbranch['siteref_otherdata'];
-					$data = json_decode($site_otherdata, true);
-					if (!is_array($data)) {
-						$data = [];
+					
+					$data = [];
+					preg_match_all('/([\w_]+):([^;]+)/', $site_otherdata, $matches);
+					for ($i = 0; $i < count($matches[1]); $i++) {
+						$data[$matches[1][$i]] = $matches[2][$i];
+					}
+					if (!array_key_exists('unit_id', $data)) {
+						throw new \Exception("unit_id not found in siteref_otherdata at site $site_id");
+					}
+					if (!array_key_exists('brand_id', $data)) {
+						throw new \Exception("brand_id not found in siteref_otherdata at site $site_id");
 					}
 					$data['site_id'] = $site_id;
 					$this->map_site[$regionbranch] = $data;
@@ -250,6 +306,42 @@ class RelationChecker {
 			throw $ex;
 		}
 
+	}
+
+	public function cekPeriode(string $periode_id) : void {
+		log::info("cek mapping periode $periode_id");
+
+		try {
+
+			if (!isset($this->stmt_perioderef_cek)) {
+				$sql = "
+					select * from mst_periodemoref 
+					where 
+						interface_id='TB' 
+					and periodemoref_name='heinvsaldo_prefix' 
+					and periodemoref_code=:heinvsaldo_prefix
+				";
+				$stmt = Database::$DbMain->prepare($sql);
+				$this->stmt_perioderef_cek = $stmt;
+			}
+
+			$stmt = $this->stmt_perioderef_cek;
+			$stmt->execute([":heinvsaldo_prefix" => $periode_id]);
+			$row_periode = $stmt->fetch();
+			if ($row_periode==null) {
+				if (!in_array($periode_id, $this->error_periode)) {
+					$this->error_periode[] = $periode_id;
+				}
+			} else {
+				$periodemo_id = $row_periode['periodemo_id'];
+				if (!array_key_exists($periode_id, $this->map_periode)) {
+					$this->map_periode[$periode_id] = $periodemo_id;
+				}
+			}
+
+		} catch (\Exception $ex) {
+			throw $ex;
+		}
 	}
 
 
@@ -275,8 +367,16 @@ class RelationChecker {
 			$error .= "Brand: ".implode(", ", $this->error_brand) . "; ";
 		}
 
+		if (count($this->error_unit)>0) {
+			$error .= "Unit: ".implode(", ", $this->error_unit) . "; ";
+		}
+
 		if (count($this->error_site)>0) {
 			$error .= "Site: ".implode(", ", $this->error_site) . "; ";
+		}
+
+		if (count($this->error_periode)>0) {
+			$error .= "Periode: ".implode(", ", $this->error_periode) . "; ";
 		}
 
 		return $error;
@@ -301,6 +401,14 @@ class RelationChecker {
 
 	public function getMapSite() : array {
 		return $this->map_site;
+	}
+
+	public function getMapPeriode() : array {
+		return $this->map_periode;
+	}
+
+	public function getMapUnit() : array {
+		return $this->map_unit;
 	}
 
 }
