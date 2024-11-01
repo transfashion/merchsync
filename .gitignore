@@ -1,6 +1,9 @@
 /vendor/
 
+run-production.sh
 config-production.php
+
+saldo-init-production.sh
 
 log.txt
 debug.txt

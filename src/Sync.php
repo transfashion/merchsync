@@ -31,7 +31,7 @@ class Sync {
 			self::$sql_cond_unprocessed = "
 				    (merchsync_isfail<3 or merchsync_batch is null) 
 				and (merchsync_result<>'SKIP' or merchsync_result is null)
-				and merchsync_type LIKE 'REG%' 
+				and merchsync_type = 'SL' 
 			";
 			
 
@@ -100,8 +100,6 @@ class Sync {
 				if (self::_DELAY_BETWEEN_LOOP > 0) {
 					sleep(self::_DELAY_BETWEEN_LOOP);
 				}
-				
-
 			}
 
 
@@ -122,8 +120,6 @@ class Sync {
 		$syncRV = new SyncRV; 
 		$syncPricing = new SyncPricing();
 		$syncClosing = new SyncClosing();
-
-
 
 		return [
 			'SL' => ['instance'=>$syncSales, 'method'=>'Sync', 'skip'=>SyncSales::SKIP_SYNC],

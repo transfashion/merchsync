@@ -24,13 +24,13 @@ class SaldoInit {
 			self::$syncItem = new SyncItem();
 
 
-			//self::getActiveItem($batchid, $regions);							// ambil data master item aktiv dari transbrowser
+			self::getActiveItem($batchid, $regions);							// ambil data master item aktiv dari transbrowser
 			//self::getItemStockPeriode($batchid, $regions, $periode);			// ambil data saldo stok pada suatu periode dari TransBrowser
-			self::cekDataMapping($batchid, $regions, $periode);					// Cek Data dahulu sebelum lanjut proses ke main database
+			//self::cekDataMapping($batchid, $regions, $periode);					// Cek Data dahulu sebelum lanjut proses ke main database
 			//self::PrepareTemporaryItemSaldo($batchid, $regions, $periode);		// siapkan data saldo per item (sizing) di temporary table
 			//self::SetupMerchItem($batchid, $regions, $periode);					// setup master itemstock, merchitem, mercharticle di main database
-			self::CekPeriodeSaldoMerchItemIntegrity($periode);					// cek heinvitem di tmp_heinvitemsaldo apakah sudah ada semua di merchitem
-			self::ApplyItemStockPeriode($batchid, $regions, $periode);			// apply saldo dari tmp_heinvitemsaldo ke itemstockmoving main database
+			//self::CekPeriodeSaldoMerchItemIntegrity($periode);					// cek heinvitem di tmp_heinvitemsaldo apakah sudah ada semua di merchitem
+			//self::ApplyItemStockPeriode($batchid, $regions, $periode);			// apply saldo dari tmp_heinvitemsaldo ke itemstockmoving main database
 			
 			Log::info('DONE.');
 		} catch (\Exception $e) {

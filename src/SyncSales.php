@@ -14,15 +14,17 @@ class SyncSales extends SyncBase {
 
 	const bool UNIMPLEMENTED_SYNC = true;
 
-	private object $cmd_bon_header_del;
-	private object $cmd_bon_items_del;
-	private object $cmd_bon_payments_del;
+	private SqlDelete $cmd_bon_header_del;
+	private SqlDelete $cmd_bon_items_del;
+	private SqlDelete $cmd_bon_payments_del;
 	
-	private object $cmd_bon_header_ins;
-	private object $cmd_bon_items_ins;
-	private object $cmd_bon_payments_ins;
+	private SqlInsert $cmd_bon_header_ins;
+	private SqlInsert $cmd_bon_items_ins;
+	private SqlInsert $cmd_bon_payments_ins;
 	
-	private object $cmd_rpt_sales;
+	private SqlInsert $cmd_rpt_sales;
+
+	private SqlDelete $cmd_rpt_sales_del;
 
 
 	function __construct() {
